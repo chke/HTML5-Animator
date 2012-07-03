@@ -1,0 +1,36 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+.claro .dijitBorderContainer-child {
+	border: none;
+}
+
+.claro .dijitBorderContainer-dijitContentPane {
+	padding: 0;
+}
+
+
+#appLayout {
+    height: 100%;
+}
+#leftCol {
+    width: 18%;
+}
+#rightCol {
+    width: 18%;
+}
+#timelineContainer {
+	height: 20%;
+	padding: 0;
+}
+#timelineContainer section {
+	
+	height: 100%;
+}
+#header {
+	height: 35px;
+}

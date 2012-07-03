@@ -1,0 +1,100 @@
+
+.labelKey {
+	display: block;
+    float: left;
+    width: 60px;
+}
+
+.valueKey {
+	display: block;
+	width: 80%;
+}
+
+.labelSrc {
+	display: block;
+    float: left;
+    width: 60px;
+}
+
+.valueSrc {
+	display: block;
+	width: 80%;
+}
+
+.floatingImg {
+	float: left;
+	margin: 4px;
+	min-width: 100px;
+}
+
+.floatingImg img {
+	max-width: 100px;
+	max-height: 100px;
+}
+
+.resourceitem {
+	clear: both;
+	overflow: hidden;
+}
+
+.resourceitem:hover {
+	background-color: #EFEFEF;
+}
+
+.itemValues {
+	margin-top:12px;
+	margin-left: 8px;
+	float: left;
+	width: 60%;
+}
+
+#addResource {
+	background-image: url("../images/add.png");
+    background-position: 6px 50%;
+    background-repeat: no-repeat;
+    padding-left: 26px;
+}
+
+.button {
+    display: inline-block;
+    height: 20px;
+    margin: 4px;
+    padding: 8px 8px 8px 8px;
+    border: 1px solid #BBBBBB;
+    border-radius: 8px;
+    cursor: pointer;
+    -webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+}
+.button:hover {
+    border: 1px solid #A3A3A3;
+    background-color: #ECECEC;
+}
+.button:active {
+    border: 1px solid #A3A3A3;
+    background-color: #BBBBBB;
+}
+
+.saveResource {
+	margin-top:12px;
+	background-image: url("../images/save.png");
+    background-position: 6px 50%;
+    background-repeat: no-repeat;
+    padding-left: 26px;
+    background-size: 16px 16px;
+}
+.deleteResource {
+	margin-top:12px;
+	background-image: url("../images/delete.png");
+    background-position: 6px 50%;
+    background-repeat: no-repeat;
+    padding-left: 26px;
+    background-size: 16px 16px;
+}
+
+.hidden {
+	display: none;
+}
