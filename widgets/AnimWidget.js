@@ -26,6 +26,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		
         engineDom: "engine",
 		rotation: 0,
+		omOffset: 8, // Offset for the object modifier
 
 		/**
 		 * Initialize the Click and Drag Handlers
@@ -222,10 +223,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		        
 		        
 		        var scale = selectedObj.getParentScale();
-    		    this.objectModifier.css("left", pos.x - selectedObj.getWidth() * selectedObj.getRefX() * scale.scaleX * selectedObj.getScaleX());
-                this.objectModifier.css("top", pos.y - selectedObj.getHeight() * selectedObj.getRefY() * scale.scaleY * selectedObj.getScaleY());
-                this.objectModifier.css("width", selectedObj.getWidth() * pos.scaleX);
-                this.objectModifier.css("height", selectedObj.getHeight() * pos.scaleY);
+		        var omWidth = selectedObj.getWidth() * pos.scaleX +  2 * this.omOffset;
+		        var omHeight = selectedObj.getHeight() * pos.scaleY +  2 * this.omOffset;
+    		    this.objectModifier.css("left", pos.x - selectedObj.getWidth() * selectedObj.getRefX() * scale.scaleX * selectedObj.getScaleX() - this.omOffset);
+                this.objectModifier.css("top", pos.y - selectedObj.getHeight() * selectedObj.getRefY() * scale.scaleY * selectedObj.getScaleY() - this.omOffset);
+                this.objectModifier.css("width", omWidth);
+                this.objectModifier.css("height", omHeight);
                 
                 
                 var omRotation = pos.rotation % 360;
@@ -284,11 +287,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
                     this.objectRefX = 0.5;
                     this.objectRefY = 0.5;
                 }
-                
+                var omOriginX = (this.objectRefX * selectedObj.getWidth() * pos.scaleX + this.omOffset) / (omWidth) * 100;
+                var omOriginY =  (this.objectRefY * selectedObj.getHeight() * pos.scaleY + this.omOffset) / (omHeight) * 100;
                 this.omRefPoint.css("left", (this.objectRefX * 100)  + "%");
                 this.omRefPoint.css("top", (this.objectRefY * 100)  + "%");
-                this.objectModifier.css("-moz-transform-origin", "" + (this.objectRefX * 100) + "% " + (this.objectRefY * 100) + "%");
-                this.objectModifier.css("-webkit-transform-origin", "" + (this.objectRefX * 100) + "% " + (this.objectRefY * 100) + "%");
+                this.objectModifier.css("-moz-transform-origin", "" + omOriginX + "% " + omOriginY + "%");
+                this.objectModifier.css("-webkit-transform-origin", "" + omOriginX + "% " + omOriginY + "%");
                 
                 this.objectModifier.css("-moz-transform", "rotate(" + omRotation + "deg)");
                 this.objectModifier.css("-webkit-transform", "rotate(" + omRotation + "deg)");
