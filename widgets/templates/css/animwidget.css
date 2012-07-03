@@ -1,0 +1,101 @@
+#engine {
+	top: 0;
+	left: 0;
+	position: absolute;
+}
+
+
+#objectModifier {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 6000;
+	border: 1px dashed #000000;
+}
+
+#objectModifier .resize {
+	display: block;
+	width: 6px;
+	height: 6px;
+	background-color: #FFFFFF;
+	border: solid 1px #000000;
+	position: absolute;
+	z-index: 6001;
+}
+
+#objectModifier .rotate {
+	display: block;
+	width: 14px;
+	height: 14px;
+	background-color: #000000;
+	border: 0 none;
+	position: absolute;
+	z-index: 5999;
+	cursor: pointer;
+}
+
+
+#omRefPoint {
+	width: 0px;
+	height: 0px;
+	top: 50%;
+	left: 50%;
+	position: absolute;
+	z-index: 6001;
+}
+
+#omRefPoint #omRefPointInner {
+	
+	top: -5px;
+	left: -5px;
+	width: 8px;
+	height: 8px;
+	border-radius: 4px;
+	background-color: #FFFFFF;
+	border: solid 1px #000000;
+	cursor: pointer;
+	display: block;
+	position: absolute;
+	z-index: 6002;
+}
+
+#orTopLeft {
+	top: -8;
+	left: -8;
+}
+#orTopRight {
+	top: -9;
+	right: -9;
+}
+#orBottomLeft {
+	bottom: -8;
+	left: -8;
+}
+#orBottomRight {
+	bottom: -8;
+	right: -8;
+}
+
+
+#omTopLeft {
+	top: -3;
+	left: -3;
+}
+
+#omTopRight {
+	top: -3;
+	right: -3;
+}
+
+#omBottomRight {
+	bottom: -3;
+	right: -3;
+}
+
+#omBottomLeft {
+	bottom: -3;
+	left: -3;
+}
+
+

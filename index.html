@@ -1,0 +1,117 @@
+<html>
+	<head>
+		<title>Dojo Animation Developer</title>
+		<link media="screen" rel="stylesheet" href="lib/dijit/themes/claro/claro.css" />
+		<link media="screen" rel="stylesheet" href="css/style.css">
+		<!--link media="screen" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dijit/themes/claro/claro.css" />
+		<link media="screen" rel="stylesheet" href="css/style.css"-->
+	</head>
+	<body class="claro">
+		<!-- http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js -->
+		<script data-dojo-config="baseUrl: '.', parseOnLoad: true, async: true, modulePaths: { widgets: 'widgets'}, packages: [{name:'widgets',location:'widgets'}, {name:'dojo',location:'lib/dojo'}, {name:'dijit',location:'lib/dijit'}, {name:'engine', main: 'Core',location:'engine/js'}]"  src="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dojo/dojo.js"></script>
+		<script>
+			require(["require", 
+					 "dijit/form/Button", 
+					 "dijit/layout/BorderContainer", 
+					 "dijit/layout/TabContainer",
+					 "dijit/layout/ContentPane", 
+					 "dijit/MenuItem", 
+					 "dijit/Tree", 
+					 "dijit/tree/ForestStoreModel", 
+					 "dojo/data/ItemFileReadStore", 
+					 "dojo/_base/array", 
+					 "dojo/_base/config", 
+					 "dojo/_base/kernel", 
+					 "dojo/_base/json", 
+					 "dojo/date/locale", 
+					 "dojo/dom", 
+					 "dojo/dom-class", 
+					 "dojo/dom-construct", 
+					 "dojo/parser", 
+					 "dojo/query", 
+					 "dojo/ready", 
+					 "widgets/AnimWidget",
+					 "widgets/JSONView",
+					 "widgets/LayerWidget",
+					 "widgets/AnimDetailsWidget",
+					 "widgets/AnimTimelineWidget",
+					 "widgets/MenuWidget",
+					 "widgets/ResourceWidget",
+					 "dijit/Dialog"], // "dijit/dijit-all", don't use
+			function(require, button, borderContainer, tabContainer, contentPane, menuItem, Tree, ForestStoreModel, ItemFileReadStore, array, config, kernel, json, locale, dom, domClass, domConstruct, parser, query, ready, animWidget, jsonViewWidget, layerWidget, AnimDetailsWidget, AnimTimelineWidget, MenuWidget) {
+				
+				dojo.ready(function() {
+					// Create the Editor Widgets
+					var animWid = new widgets.AnimWidget({});
+					dojo.place(animWid.domNode, "createAnim");
+					animWid.startup();
+					
+					var jsonView = new widgets.JSONView({});
+					dojo.place(jsonView.domNode, "jsonView");
+					jsonView.startup();
+					
+					var layerWidget = new widgets.LayerWidget({});
+					dojo.place(layerWidget.domNode, "layerWidget");
+					layerWidget.startup();
+					
+					var animDetails = new widgets.AnimDetailsWidget({});
+					dojo.place(animDetails.domNode, "animDetails");
+					animDetails.startup();
+					
+					var animTimeline = new widgets.AnimTimelineWidget({});
+					dojo.place(animTimeline.domNode, "timelineContainer");
+					animTimeline.startup();
+					
+					var menuWidget = new widgets.MenuWidget({});
+					dojo.place(menuWidget.domNode, "header");
+					menuWidget.startup();
+					
+					var resWid = new widgets.ResourceWidget({});
+					dojo.place(resWid.domNode, "resourceManager");
+					resWid.startup();
+				});
+				
+			});
+
+		</script>
+		<div data-dojo-type="dijit.Dialog" id="infoDialog" title="Info">
+		    <p>This is a work in progress of my Animation System for HTML5. This editor allows creating HTML5 animations that can be displayed on different platforms.</p>
+		    <p>Supported platforms so far, Mozilla Firefox and webkit based browsers.</p>
+		</div>
+		<div id="appLayout" class="demoLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline'">
+			<div class="centerPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'top'">
+				<div data-dojo-type="dijit.layout.ContentPane" id="createAnim" title="Animation" selected="true">
+					
+				</div>
+				<div data-dojo-type="dijit.layout.ContentPane" id="resourceManager" title="Resources">
+					
+				</div>
+			</div>
+			<div id="timelineContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'bottom', splitter: true">
+			</div>
+			<div id="header" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'top'">
+				
+			</div>
+			<div id="leftCol" class="edgePanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'left', splitter: true">
+				<div class="centerPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'top'">
+					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Layer'"  selected="true">
+						<div id="layerWidget" >
+						</div>
+					</div>
+				</div>
+			</div>
+			<div id="rightCol" class="edgePanel" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region: 'right', splitter: true">
+				<div class="centerPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'top'">
+					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Details'">
+						<div id="animDetails"></div>
+							
+					</div>
+					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Debug'">
+						<div id="jsonView"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+	</body>
+</html>

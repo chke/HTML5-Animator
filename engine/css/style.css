@@ -1,0 +1,16 @@
+#engine div {
+	position: absolute;
+	display: block;
+	
+}
+#engine div, #engine img {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-webkit-tap-highlight-color:rgba(0,0,0,0);
+}
+
+#engine {
+	width: 100%;
+	height: 100%;
+}
+
