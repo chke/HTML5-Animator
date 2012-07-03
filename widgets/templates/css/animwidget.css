@@ -11,6 +11,14 @@
 	top: 0;
 	left: 0;
 	z-index: 6000;
+}
+
+#objectModifierInner {
+	position: absolute;
+	top: 8px;
+	bottom: 8px;
+	left: 8px;
+	right: 8px;
 	border: 1px dashed #000000;
 }
 
@@ -61,41 +69,41 @@
 }
 
 #orTopLeft {
-	top: -8;
-	left: -8;
+	top: 0;
+	left: 0;
 }
 #orTopRight {
-	top: -9;
-	right: -9;
+	top: 0;
+	right: 0;
 }
 #orBottomLeft {
-	bottom: -8;
-	left: -8;
+	bottom: 0;
+	left: 0;
 }
 #orBottomRight {
-	bottom: -8;
-	right: -8;
+	bottom: 0;
+	right: 0;
 }
 
 
 #omTopLeft {
-	top: -3;
-	left: -3;
+	top: 5px;
+	left: 5px;
 }
 
 #omTopRight {
-	top: -3;
-	right: -3;
+	top: 5px;
+	right: 5px;
 }
 
 #omBottomRight {
-	bottom: -3;
-	right: -3;
+	bottom: 5px;
+	right: 5px;
 }
 
 #omBottomLeft {
-	bottom: -3;
-	left: -3;
+	bottom: 5px;
+	left: 5px;
 }
 
 
