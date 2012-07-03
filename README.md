@@ -1,5 +1,5 @@
 HTML5 Animator
---------------
+==============
 
 This is a work in progress of my Animation System for HTML5. This editor allows creating HTML5 animations that can be displayed on different platforms. Supported platforms so far, Mozilla Firefox and webkit based browsers.
 The HTML5 Animator consists of two components. On the one hand, the editor itself, where the animations can be created and also an engine that plays the created animations. The engine makes sure that the animations run on most platforms.
