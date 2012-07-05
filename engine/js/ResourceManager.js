@@ -91,6 +91,17 @@ define(function() {
         }
         return resourceKeys;
     }
+    
+    /**
+     * Returns the URL of the given resourceKey 
+	 * @param {String} key
+     */
+    ResourceManager.getResourceUrl = function(key) {
+    	if (resources[key] != null) {
+    		return resources[key].src;
+    	}
+    	return null;
+    }
 
     return ResourceManager;
 }); 

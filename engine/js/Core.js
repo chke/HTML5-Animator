@@ -449,7 +449,9 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
 };
 		}
 		
-        localStorage.setItem("animation", JSON.stringify(properties));
+		if ('localStorage' in window && window['localStorage'] !== null && localStorage.getItem("animation") !== null) {
+            localStorage.setItem("animation", JSON.stringify(properties));
+        }
         
         for (var key in properties.children) {
             var animObj = this.createElement(properties.children[key]);

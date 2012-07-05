@@ -2,20 +2,25 @@
 
 
 
-require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animdetailswidget.html", "engine/ResourceManager", "lib/jquery.js"],
-        function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, ResourceManager) {
+require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animdetailswidget.html", "engine/ResourceManager", "dojo/store/Memory", "dijit/form/ComboBox", "lib/jquery.js"],
+        function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, ResourceManager, Memory, ComboBox) {
      
 	return declare("widgets.AnimDetailsWidget", [_Widget, _TemplatedMixin], {
         templateString: template,
-		
+		comboBox: null,
+		resourceKey: "",
 		
 		postCreate: function() {
+		    dojo.create("link", {rel: "stylesheet", href: "./widgets/templates/css/animdetailswidget.css" }, dojo.query("head")[0]);
             dojo.subscribe("/animwidget/selectObject", this, "onUpdate");
             dojo.subscribe("/animwidget/updateObject", this, "onUpdate");
             dojo.subscribe("/resourceitem/updateResource", this, "updateResourceList");
             
 		},
 		
+		/**
+		 * Is called when the data to be displayed has to be updated 
+		 */
 		onUpdate: function (obj) {
 		    if (obj !== undefined) {
                 this.setValue(obj.getX(), this.transformX);
@@ -30,7 +35,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 this.setValue(obj.getScaleY(), this.scaleY, "1");
                 if (obj.getType() === "Sprite") {
                     this.resourceKeyTr.style.display = "";
-                    this.setValue(obj.getResourceKey(), this.resourceKey, "");
+                    this.resourceKey = obj.getResourceKey();
+                    this.selectResourceItem(obj.getResourceKey());
                 } else {
                     this.resourceKeyTr.style.display = "none";
                 }
@@ -38,16 +44,44 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 		    }
 		},
 		
+		/**
+		 * Updates the Resource ComboBox with the new Resources 
+		 */
 		updateResourceList: function() {
 		    var resourceList = ResourceManager.getKeyList();
-		    this.resourceKey.innerHTML = "";
-		    for (var key in resourceList) {
-		        
-		        dojo.create("option", {
-                    value: resourceList[key]
-                }, this.resourceKeyDataList);
-		    }
 		    
+		    // create a new Store for the list elements
+		    var resStore = new Memory({
+		        data: []
+		    });
+		    // Add all Resources to the list
+		    for (var index in resourceList) {
+		        resStore.put({name: resourceList[index], label: "<img class='comboBoxImage' src='' style='background:url(" + ResourceManager.getResourceUrl(resourceList[index]) + ");' /><span class='comboBoxText'>" + resourceList[index] + "</span>"});
+		    }
+		    // Update the store of the combobox
+ 			this.comboBox.attr('store', resStore);
+ 			
+	        
+		},
+		
+		/**
+		 * Is called when an item in the combobox has been selected
+		 * @param {String} key
+		 */
+		onSelectResourceItem: function(selectedValue) {
+			if (this.resourceKey != selectedValue) {
+				var change = {};
+				change.resourceKey = selectedValue;
+				dojo.publish("/animdetailswidget/updateSelectedObject", [change]);
+			}
+		},
+		
+		/**
+		 * Select the Combobox item with the given key
+		 * @param {String} key
+		 */
+		selectResourceItem: function(key) {
+			this.comboBox.attr('value', key);
 		},
 		
 		setValue: function (val, node, defaultVal) {
@@ -83,8 +117,6 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 change.scaleX = this.value;
             } else if (this.id == event.data.scaleY.id) {
                 change.scaleY = this.value;
-            } else if (this.id == event.data.resourceKey.id) {
-                change.resourceKey = this.value;
             }
             
             
@@ -118,7 +150,18 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             $("#scaleY").bind("change", this, this.changeValue);
             $("#resourceKey").bind("change", this, this.changeValue);
             
-            
+            // Create the Combobox for the resources
+            this.comboBox = new ComboBox({
+	            id: "resourceKey",
+	            name: "resourceKey",
+	            value: "",
+	            labelAttr:"label",
+	            labelType:"html",
+	            style: {
+	            	width: "100%"
+	            }
+	        }, "resourceKey");
+	        dojo.connect(this.comboBox, "onChange", this, this.onSelectResourceItem);
             
             this.updateResourceList();
 		}

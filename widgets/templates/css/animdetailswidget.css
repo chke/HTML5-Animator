@@ -1,0 +1,13 @@
+.comboBoxText {
+	
+	margin-left: 4px;
+}
+
+.comboBoxImage {
+	width: 16px;
+	height: 16px;
+	border: 0px none;
+	display: inline-block;
+	background-size: contain;
+	background-repeat:no-repeat;
+}
