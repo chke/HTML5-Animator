@@ -53,7 +53,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         init : function() {
             this.objectInfoView = $("#objectInfoView");
             this.timelineView = $("#timelineView");
-            this.timelineView[0].style.width = this.TIMELINE_WIDTH;
+            this.timelineView[0].style.width = this.TIMELINE_WIDTH + "px";
             
             this.objectInfoView.empty();
             this.timelineView.empty();
@@ -104,7 +104,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             });
             
             var tlHeader = $("#timelineHeader");
-            tlHeader[0].style.width = this.TIMELINE_WIDTH;
+            tlHeader[0].style.width = this.TIMELINE_WIDTH + "px";
             var val;
             for (var i = 1; i < this.TIMELINE_WIDTH / 16; i++) {
                 val = "";

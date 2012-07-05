@@ -214,7 +214,6 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		    if (selectedObj !== undefined) {
 		        var currObj = selectedObj;
 		        
-		        console.log(selectedObj);
 		        var pos = selectedObj.getRefStagePos();
 		        
 		        // Save the last object pos
