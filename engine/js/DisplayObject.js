@@ -223,18 +223,13 @@ define(['engine/Vector2d'], function(Vector2d) {
      * Retruns the Stage Position of the reference point of this Display Object
      */
     DisplayObject.prototype.getRefStagePos = function() {
-        var distToRefX, distToRefY;
-        var newPosX = 0, newPosY = 0;
-        var distCurrRefX = this.getX();
-        var distCurrRefY = this.getY();
-        var currObj = this.getParent();
         var fullRotation = this.getRotation();
         var fullScaleX = this.getScaleX();
         var fullScaleY = this.getScaleY();
-        //var Vector2d = require('engine/Vector2d');
-        var vec = new Vector2d(distCurrRefX, distCurrRefY);
+        var vec = new Vector2d(this.getX(), this.getY());
+        var currObj = this.getParent();
         // iterate through the parents to find the real Stage Position
-        while (currObj !== undefined) {
+        while (currObj != undefined) {
             // Scaling has to be done first
             vec.scale(currObj.getScaleX(), currObj.getScaleY());
             vec.rotate(currObj.getRotation());

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Dojo Animation Developer</title>
+		<title>HTML5 Animator</title>
 		<!--link media="screen" rel="stylesheet" href="lib/dijit/themes/claro/claro.css" /-->
 		<link media="screen" rel="stylesheet" href="css/style.css">
 		<link media="screen" rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/dojo/1.7.2/dijit/themes/claro/claro.css" />
@@ -38,6 +38,7 @@
 					 "widgets/AnimTimelineWidget",
 					 "widgets/MenuWidget",
 					 "widgets/ResourceWidget",
+					 "widgets/KeyframeWidget",
 					 "dijit/Dialog"], // "dijit/dijit-all", don't use
 			function(require, button, borderContainer, tabContainer, contentPane, menuItem, Tree, ForestStoreModel, ItemFileReadStore, array, config, kernel, json, locale, dom, domClass, domConstruct, parser, query, ready, animWidget, jsonViewWidget, layerWidget, AnimDetailsWidget, AnimTimelineWidget, MenuWidget) {
 				
@@ -70,6 +71,11 @@
 					var resWid = new widgets.ResourceWidget({});
 					dojo.place(resWid.domNode, "resourceManager");
 					resWid.startup();
+					
+					var keyfWid = new widgets.KeyframeWidget({});
+					dojo.place(keyfWid.domNode, "keyframeWidget");
+					keyfWid.startup();
+					
 				});
 				
 			});
@@ -109,6 +115,9 @@
 					</div>
 					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Debug'">
 						<div id="jsonView"></div>
+					</div>
+					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Keyframes'">
+						<div id="keyframeWidget"></div>
 					</div>
 				</div>
 			</div>

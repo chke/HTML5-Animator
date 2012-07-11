@@ -14,6 +14,7 @@ define(['engine/DisplayObject'], function(DisplayObject) {
         if (settings.animations != null) {
             this.animations = settings.animations;
         }
+        this.animationList = [];
     }
     
     
@@ -73,6 +74,32 @@ define(['engine/DisplayObject'], function(DisplayObject) {
  
     AnimObject.prototype.play = function() {
         
+    }
+    
+    AnimObject.prototype.addAnimation = function(displObj, animName, animTime) {
+    	this.animationList.push({displObj: displObj, animName: animName, animTime:animTime});
+    }
+    
+    AnimObject.prototype.play = function() {
+    	for (var i=0; i < this.animationList.length; i++) {
+    		var displObj = this.animationList[i].displObj;
+    		var animName = this.animationList[i].animName;
+    		var animTime = this.animationList[i].animTime;
+    		displObj.domNode.style.MozAnimation = animName + " " + animTime + "s linear infinite";
+	        displObj.domNode.style.WebkitAnimation = animName + " " + animTime + "s linear infinite";
+	        displObj.domNode.style.Animation = animName + " " + animTime + "s linear infinite";
+    	}
+    	
+    }
+    
+    AnimObject.prototype.stop = function() {
+    	for (var i=0; i < this.animationList.length; i++) {
+    		var displObj = this.animationList[i].displObj;
+    		displObj.domNode.style.MozAnimation = "";
+	        displObj.domNode.style.WebkitAnimation = "";
+	        displObj.domNode.style.Animation = "";
+    	}
+    	
     }
  
     // return constructor

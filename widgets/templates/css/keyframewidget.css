@@ -1,0 +1,7 @@
+#keyframeWidget input {
+	width: 40px;
+}
+
+#keyframeWidget canvas {
+	border: 1px solid #aaaaaa;
+}

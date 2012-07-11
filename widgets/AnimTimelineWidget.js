@@ -1,4 +1,4 @@
-require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject) {
+require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "engine/util/CubicBezier", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject, CubicBezier) {
 
     return declare("widgets.AnimTimelineWidget", [_Widget, _TemplatedMixin], {
         MOUSE_BUTTON_RIGHT: 2,
@@ -20,12 +20,14 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         scrubberPosX : undefined,
         scrubberStartX : undefined,
         stageInitialized: false,
+        deselectKeyframe: false,
         objectInfoView: undefined,
         timelineView: undefined,
         stageObjects: {},
         activeScene: undefined,
         stage: undefined,
         defaultScene:"defaultAnim",
+        linearBezier:new CubicBezier(0, 0, 1, 1),
         /** Called after creation of the widget and initializes the necessary files for this widget */
         postCreate : function() {
             dojo.create("link", {
@@ -41,6 +43,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             dojo.subscribe("/animwidget/addObject", this, "onAddObject");
             dojo.subscribe("/layerwidget/updateLayerPosition", this, "onUpdateLayerPosition");
             dojo.subscribe("/layerwidget/updateObject", this, "onChangeObject");
+            dojo.subscribe("/keyframewidget/updateinbetweens", this, "updateInbetweens");
             
             
             if (!this.stageInitialized) {
@@ -74,7 +77,6 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             $(".keyframe").on("mousedown", this, function (e) {
                 e.data.onKFMouseDown(e);
                 e.data.selectedKeyframe = this; // set the selected keyframe to the current selected div
-                
             });
             
             $("#timelineScrubber").on("mousedown", $.proxy(this.onMouseDown, this));
@@ -156,6 +158,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 this.stageObjects[newParentObj.getId()].objectNode[0].appendChild(this.stageObjects[displObj.getId()].objectNode[0]);
             }
         },
+        updateInbetweens: function(bezier, displObj, keyframeId) {
+        	this.calculateInbetween(displObj.getId(), keyframeId, this.stageObjects[displObj.getId()][this.activeScene], this.activeScene, false, true, false, bezier);
+        },
         
         onChangeObject:function(change, displObj) {
             if (change.deleteObject !== undefined && change.deleteObject === true) {
@@ -193,8 +198,11 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                     this.setValue(displObj.getZIndex(), keyframe, "zIndex");
                     //this.setValue(displObj.getScaleX(), keyframe, "scaleX");
                     //this.setValue(displObj.getScaleY(), keyframe, "scaleY");
-                    
-                    this.calculateInbetween(displObj.getId(), keyframeId + 1, this.stageObjects[displObj.getId()][this.activeScene], this.activeScene, true, true);
+                    var bezier = this.linearBezier;
+                    if (keyframe["timingFunc"] != null) {
+                    	bezier = CubicBezier.readTimingFunc(keyframe["timingFunc"]);
+                    }
+                    this.calculateInbetween(displObj.getId(), keyframeId + 1, this.stageObjects[displObj.getId()][this.activeScene], this.activeScene, true, true, false, bezier);
                     //stageObjectId, keyframePos, animParams, scene, searchBackward, searchForward) {
                 }
             }
@@ -267,7 +275,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             }
         },
         /** Calculates the inbetween of a given keyframePos */
-        calculateInbetween: function(stageObjectId, keyframePos, animParams, scene, searchBackward, searchForward, deleteMiddleKf) {
+        calculateInbetween: function(stageObjectId, keyframeId, animParams, scene, searchBackward, searchForward, deleteMiddleKf, bezier) {
+            // If the bezier is not given take the default linear one
+            if (bezier == null) {
+            	bezier = this.linearBezier;
+            }
+            
             if (this.stageObjects[stageObjectId]["inbetween"] === undefined) {
                 this.stageObjects[stageObjectId]["inbetween"] = {};
             }
@@ -277,85 +290,93 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             var lastKeyframe = 99;
             var inbetween = this.stageObjects[stageObjectId]["inbetween"][scene];
             var j;
-            for (var key in animParams[keyframePos]) { // iterate over the animTypes (rotation)
-                var startPos = -1;
-                var endPos = -1;
-                if (searchBackward) {
-                    //we have to search for the start of the animType
-                    // it could also be that the animType is not defined here
-                    j = keyframePos - 1;
-                    while (j > 0 && (animParams[j] === undefined || animParams[j][key] === undefined)) {
-                        j--;
-                    }
-                    if (j > 0 || (animParams[j] !== undefined && animParams[j][key] !== undefined)) {
-                        startPos = j;
-                    }
+            for (var key in animParams[keyframeId]) { // iterate over the animTypes (rotation)
+                if (key != "timingFunc") {
+	                var startPos = -1;
+	                var endPos = -1;
+	                if (searchBackward) {
+	                    //we have to search for the start of the animType
+	                    // it could also be that the animType is not defined here
+	                    j = keyframeId - 1;
+	                    while (j > 0 && (animParams[j] === undefined || animParams[j][key] === undefined)) {
+	                        j--;
+	                    }
+	                    if (j > 0 || (animParams[j] !== undefined && animParams[j][key] !== undefined)) {
+	                        startPos = j;
+	                    }
+	                }
+	                if (searchForward) {
+	                    // search the next keyframe with this animationType after this one
+	                    j = keyframeId + 1;
+	                    while (j < lastKeyframe && (animParams[j] === undefined || animParams[j][key] === undefined)) {
+	                        j++;
+	                    }
+	                    if (j < lastKeyframe || (animParams[j] !== undefined && animParams[j][key] !== undefined)) {
+	                        endPos = j;
+	                    }
+	                }
+	                if (deleteMiddleKf) {
+	                    if (startPos > 0 && endPos > 0) {
+	                        // Overwrite the middle keyframe from start to end with inbetweens
+	                        var dif = animParams[endPos][key] - animParams[startPos][key];
+	                        var difEach = dif / (endPos - startPos);
+	                        var val = 0;
+	                        this.setInbetweenValue(startPos, endPos, animParams, inbetween, key, dif, bezier);
+	                    } else {
+	                        // If either start or end is undefined there is just one keyframe (or none) and all the inbetweens can be deleted
+	                        if (startPos < 0) {
+	                            startPos = 0;
+	                        }
+	                        if (endPos < 0) {
+	                            endPos = lastKeyframe;
+	                        }
+	                        for (var i = startPos + 1; i < endPos; i++) {
+	                            if (inbetween[i] != undefined) {
+	                                delete inbetween[i][key];
+	                            }
+	                        }
+	                    }
+	                } else {
+	                    if (startPos > 0) {
+	                        var dif = animParams[keyframeId][key] - animParams[startPos][key];
+	                        var difEach = dif / (keyframeId - startPos);
+	                        var val = 0;
+	                        
+	                        this.setInbetweenValue(startPos, keyframeId, animParams, inbetween, key, dif, bezier);
+	                        /*for (var i = startPos + 1; i < keyframeId; i++) {
+	                            val = val + difEach;
+	                            if (inbetween[i] === undefined) {
+	                                inbetween[i] = {};
+	                            }
+	                            inbetween[i][key] = animParams[startPos][key] + val;
+	                        }*/
+	                    }
+	                    if (endPos > 0) {
+	                        var dif = animParams[endPos][key] - animParams[keyframeId][key];
+	                        var difEach = dif / (endPos - keyframeId);
+	                        var val = 0;
+	                        
+	                        this.setInbetweenValue(keyframeId, endPos, animParams, inbetween, key, dif, bezier);
+	                        
+	                        /*for (var i = keyframeId + 1; i < endPos; i++) {
+	                            val = val + difEach;
+	                            if (inbetween[i] === undefined) {
+	                                inbetween[i] = {};
+	                            }
+	                            inbetween[i][key] = animParams[keyframeId][key] + val;
+	                        }*/
+	                    }
+	                }
                 }
-                if (searchForward) {
-                    // search the next keyframe with this animationType after this one
-                    j = keyframePos + 1;
-                    while (j < lastKeyframe && (animParams[j] === undefined || animParams[j][key] === undefined)) {
-                        j++;
-                    }
-                    if (j < lastKeyframe || (animParams[j] !== undefined && animParams[j][key] !== undefined)) {
-                        endPos = j;
-                    }
-                }
-                if (deleteMiddleKf) {
-                    if (startPos > 0 && endPos > 0) {
-                        // Overwrite the middle keyframe from start to end with inbetweens
-                        var dif = animParams[endPos][key] - animParams[startPos][key];
-                        var difEach = dif / (endPos - startPos);
-                        var val = 0;
-                        for (var i = startPos + 1; i < endPos; i++) {
-                            val = val + difEach;
-                            if (inbetween[i] === undefined) {
-                                inbetween[i] = {};
-                            }
-                            inbetween[i][key] = animParams[startPos][key] + val;
-                        }
-                    } else {
-                        // If either start or end is undefined there is just one keyframe (or none) and all the inbetweens can be deleted
-                        if (startPos < 0) {
-                            startPos = 0;
-                        }
-                        if (endPos < 0) {
-                            endPos = lastKeyframe;
-                        }
-                        for (var i = startPos + 1; i < endPos; i++) {
-                            if (inbetween[i] != undefined) {
-                                delete inbetween[i][key];
-                            }
-                        }
-                    }
-                } else {
-                    if (startPos > 0) {
-                        var dif = animParams[keyframePos][key] - animParams[startPos][key];
-                        var difEach = dif / (keyframePos - startPos);
-                        var val = 0;
-                        for (var i = startPos + 1; i < keyframePos; i++) {
-                            val = val + difEach;
-                            if (inbetween[i] === undefined) {
-                                inbetween[i] = {};
-                            }
-                            inbetween[i][key] = animParams[startPos][key] + val;
-                        }
-                    }
-                    if (endPos > 0) {
-                        var dif = animParams[endPos][key] - animParams[keyframePos][key];
-                        var difEach = dif / (endPos - keyframePos);
-                        var val = 0;
-                        for (var i = keyframePos + 1; i < endPos; i++) {
-                            val = val + difEach;
-                            if (inbetween[i] === undefined) {
-                                inbetween[i] = {};
-                            }
-                            inbetween[i][key] = animParams[keyframePos][key] + val;
-                        }
-                    }
-                }
-                
             }
+        },
+        setInbetweenValue: function(startPos, endPos, animParams, inbetween, key, dif, bezier) {
+        	for (var i = startPos + 1; i < endPos; i++) {
+	            if (inbetween[i] === undefined) {
+	                inbetween[i] = {};
+	            }
+	            inbetween[i][key] = animParams[startPos][key] + dif * bezier.getY((i - startPos) / (endPos - startPos));
+	        }
         },
         /** Adds a new Keyframe to the animation */
         addKeyframe: function (stageObject, keyframeId, animParams, scene, init) {
@@ -367,7 +388,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 this.activeScene = this.defaultScene;
             }
             if (keyframeId >= 1 && animParams !== undefined) {
-                this.calculateInbetween(stageObjectId, keyframeId, animParams, scene, true, !init); // if the keyframes are initialized the keyframes don't need to be searched forwards
+            	var bezier = this.linearBezier;
+            	if (this.stageObjects[stageObjectId][scene][keyframeId]["timingFunc"] != null) {
+                	bezier = CubicBezier.readTimingFunc(this.stageObjects[stageObjectId][scene][keyframeId]["timingFunc"]);
+                }
+            	
+                this.calculateInbetween(stageObjectId, keyframeId, animParams, scene, true, !init, false, bezier); // if the keyframes are initialized the keyframes don't need to be searched forwards
             }
             if (!init) { // If this is not the initial appending of the keyframes we have to add our keyframe to the stage object
                 var animObj = stageObject;
@@ -390,26 +416,42 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             var keyframeNode = $('<div class="keyframe" style="left: ' + ((keyframeId - 1) * this.gridSize) + 'px;"></div>');
             keyframeNode.on("mousedown", this, function (e) {
                 e.data.onKFMouseDown(e);
+                var lastKf = e.data.selectedKeyframe;
+                if (e.data.selectedKeyframe != null) {
+                	dojo.removeClass(e.data.selectedKeyframe, "selected");
+                }
                 e.data.selectedKeyframe = this; // set the selected keyframe to the current selected div
+                if (e.data.selectedKeyframe == lastKf) {
+                	e.data.deselectKeyframe = true;
+                }
             });
             this.stageObjects[stageObjectId]["timelineNode"].append(keyframeNode);
         },
-        
+        /**
+         *  Find the stage Object by keyframe
+         *  displayObject is at obj.displObj
+         */
+        findStageObjectByKeyframe: function (keyframe) {
+	        var obj = null;
+        	if (keyframe != null) {
+	        	var kfParent = keyframe.parentElement;
+	        	// Iterate through the stage Objects
+	            for (var key in this.stageObjects) {
+	                obj = this.stageObjects[key];
+	                if (obj["timelineNode"] != null && obj["timelineNode"][0] == kfParent) {
+	                    break;
+	                }
+	            }
+           }
+	       return obj;
+        },
         /**
          * Removes a keyframe form the timeline and updates the inbetweens 
          */
         removeKeyframe: function() {
             if (this.selectedKeyframe != null && this.selectedKeyframe.parentElement != null) {
                 var kfParent = this.selectedKeyframe.parentElement;
-                var obj;
-                // Find displayObject by keyframe
-                for (var key in this.stageObjects) {
-                    obj = this.stageObjects[key];
-                    if (obj["timelineNode"] != null && obj["timelineNode"][0] == kfParent) {
-                        break;
-                    }
-                    
-                }
+                var obj = this.findStageObjectByKeyframe(this.selectedKeyframe);
                 
                 if (obj["timelineNode"] != null && obj["timelineNode"][0] == kfParent) {
                     if (obj[this.activeScene] != null) {
@@ -452,11 +494,14 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                         var kfId = kfPos / this.gridSize + 1;
                         var newKfId = newKfPos / this.gridSize + 1;
                         keyframes[newKfId] = keyframes[kfId]; // set the new pos
-                        delete keyframes[kfId];
-                        
-                        this.calculateInbetween(obj.displObj.getId(), newKfId, keyframes, this.activeScene, true, true);
-                        
-                        
+                        if (newKfId != kfId) {
+                        	delete keyframes[kfId];
+                        	var bezier = this.linearBezier;
+                        	if (keyframe["timingFunc"] != null) {
+		                    	bezier = CubicBezier.readTimingFunc(keyframe["timingFunc"]);
+		                    }
+                        	this.calculateInbetween(obj.displObj.getId(), newKfId, keyframes, this.activeScene, true, true, false, bezier);
+                        }
                         
                     }
                 }
@@ -478,11 +523,15 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                     var that = event.data.that;
                     var pos = that.fitToGrid((event.pageX - $(event.target).offset().left) + that.gridSize / 2);
                     var keyframeId = pos / that.gridSize;
-                    if (that.stageObjects[event.data.displObj.getId()] == undefined) {
-                        that.stageObjects[event.data.displObj.getId()] = {};
-                        that.stageObjects[event.data.displObj.getId()][that.activeScene] = {};
-                    }
-                    that.addKeyframe(event.data.displObj, keyframeId, that.stageObjects[event.data.displObj.getId()][that.activeScene], that.activeScene, false);
+                    var obj = that.findStageObjectByKeyframe(that.selectedKeyframe);
+                    if (event.data.displObj != null && (that.stageObjects[event.data.displObj.getId()] == null 
+                    	|| that.stageObjects[event.data.displObj.getId()][that.activeScene] == null || that.stageObjects[event.data.displObj.getId()][that.activeScene][keyframeId] == null)) {
+	                    if (that.stageObjects[event.data.displObj.getId()] == null) {
+	                        that.stageObjects[event.data.displObj.getId()] = {};
+	                        that.stageObjects[event.data.displObj.getId()][that.activeScene] = {};
+	                    }
+	                    that.addKeyframe(event.data.displObj, keyframeId, that.stageObjects[event.data.displObj.getId()][that.activeScene], that.activeScene, false);
+                	}
                 });
                 
                 if (parentNode === undefined) {
@@ -510,6 +559,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             this.keyframePos = e.target.offsetLeft;
             this.movedKeyframe = false;
             this.keyframeRefX = e.clientX - e.target.offsetLeft;
+            this.keyframeX = this.fitToGrid(e.clientX - this.keyframeRefX);
         },
         /** Scrubber dragging */
         onMouseDown : function(e) {
@@ -543,9 +593,23 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         },
         /** Leave the keyframe or the scrubber */
         onMouseUp : function(e) {
-            if (this.keyframeSelected && !this.movedKeyframe && e.button == this.MOUSE_BUTTON_RIGHT) {
-                // Remove Keyframe
-                this.removeKeyframe(e);
+            if (this.keyframeSelected && !this.movedKeyframe) {
+                if (e.button == this.MOUSE_BUTTON_RIGHT) {
+                	// Remove Keyframe on right click
+                	this.removeKeyframe(e);
+                } else {
+                	// Select Keyframe
+                	var obj = this.findStageObjectByKeyframe(this.selectedKeyframe);
+                	if (this.deselectKeyframe) {
+                		this.deselectKeyframe = false;
+                		this.selectedKeyframe = null;
+                		dojo.publish("/animtimelinewidget/selectKeyframe", [null, 0, null]);
+                	} else {
+                		dojo.addClass(this.selectedKeyframe, "selected");
+                		dojo.publish("/animtimelinewidget/selectKeyframe", [obj.displObj, (this.keyframeX / this.gridSize + 1), obj[this.activeScene]]);
+                	}
+                	
+                }
             } else if (this.movedKeyframe) {
                 this.moveKeyframe(e);
             }

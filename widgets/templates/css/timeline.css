@@ -162,3 +162,8 @@
 	float: left;
 	top: 5px;
 }
+
+
+.selected {
+	background-image: url("../images/keyframeSelected.png");
+}

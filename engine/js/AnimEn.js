@@ -70,7 +70,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 			}
 			
 			
-			setTimeout(this.animationLoopDom, 1000 / this.fps);
+			gameLoopId = setTimeout(this.animationLoop, 1000 / this.fps);
 		}
 	}
 	
@@ -145,6 +145,8 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	            keyframes += '} ';
 	            
 	            //keyframes = "@-moz-keyframes Animation1 { 1% { -moz-transform:rotate( 0deg ) ; left:0px; top:0px; } 100% { -moz-transform:rotate( 0deg ) ; left:0px; top:0px; } 50% { -moz-transform:rotate( 12deg ) ; left:0px; top:0px; } }";
+	            //keyframes = "@-moz-keyframes Animation17 { 0% { -moz-transform:rotate( 0deg ) ; -moz-animation-timing-function: cubic-bezier(0, 1, 0, 1); left:-4px; top:3px; } 100% { -moz-transform:rotate( 0deg ) ; -moz-animation-timing-function: cubic-bezier(0, 0, 0, 0); left:0px; top:5px; } 49% { -moz-animation-timing-function: ease-in; -moz-transform:rotate( 0deg ) ; left:556px; top:0px; } }";
+	            
 	            
                 if(document.styleSheets && document.styleSheets.length) {
                     document.styleSheets[0].insertRule(keyframes, 0);
@@ -154,13 +156,19 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
                     document.getElementsByTagName( 'head' )[0].appendChild(s);
         
                 }
+                this.animObjs[key].addAnimation(displayObj, animName, animTime);
+                console.log(keyframes);
                 
-                displayObj.domNode.style.MozAnimation = animName + " " + animTime + "s linear infinite";
+                
+                /*displayObj.domNode.style.MozAnimation = animName + " " + animTime + "s linear infinite";
                 displayObj.domNode.style.WebkitAnimation = animName + " " + animTime + "s linear infinite";
                 displayObj.domNode.style.Animation = animName + " " + animTime + "s linear infinite";
-                console.log(keyframes);
+                console.log(keyframes);*/
             }
+            this.animObjs[key].play();
+            //this.animObjs[key].stop();
 	    }
+	    
 	}
 	
     AnimEn.prototype.getVendorPrefix = function() {
@@ -203,6 +211,9 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         if (animation.y !== undefined) {
             animString += "top:" + (animation.y - displayObj.getRefPosY() + ((displayObj.getParent() != null) ? displayObj.getParent().getRefPosY() : 0)) + "px; ";
         }
+        if (animation.timingFunc !== undefined) {
+        	animString += prefix + "animation-timing-function: " + animation.timingFunc + " ";
+        }
         animString += "} ";
         return animString;
         
@@ -233,7 +244,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         return maxKf;
 	}
 	
-	AnimEn.prototype.animationLoopDom = function() {
+	AnimEn.prototype.animationLoop = function() {
 		
 	}
 	
