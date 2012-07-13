@@ -389,7 +389,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             }
             if (keyframeId >= 1 && animParams !== undefined) {
             	var bezier = this.linearBezier;
-            	if (this.stageObjects[stageObjectId][scene][keyframeId]["timingFunc"] != null) {
+            	if (this.stageObjects[stageObjectId][scene][keyframeId] != null && this.stageObjects[stageObjectId][scene][keyframeId]["timingFunc"] != null) {
                 	bezier = CubicBezier.readTimingFunc(this.stageObjects[stageObjectId][scene][keyframeId]["timingFunc"]);
                 }
             	
