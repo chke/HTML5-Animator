@@ -1,4 +1,4 @@
-require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "engine/util/CubicBezier", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject, CubicBezier) {
+require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "engine/util/CubicBezier", "engine/util/Storage", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject, CubicBezier, Storage) {
 
     return declare("widgets.AnimTimelineWidget", [_Widget, _TemplatedMixin], {
         MOUSE_BUTTON_RIGHT: 2,
@@ -44,6 +44,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             dojo.subscribe("/layerwidget/updateLayerPosition", this, "onUpdateLayerPosition");
             dojo.subscribe("/layerwidget/updateObject", this, "onChangeObject");
             dojo.subscribe("/keyframewidget/updateinbetweens", this, "updateInbetweens");
+            dojo.subscribe("/sceneitem/activatescene", this, "onActivateScene");
             
             
             if (!this.stageInitialized) {
@@ -116,6 +117,22 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 tlHeader.append("<span>" + val + "</span>");
             }
         },
+        /**
+         * This Method is called when the Active Scene has changed and initializes the animations with the new scene
+         */
+        onActivateScene:function(newScene) {
+        	this.activeScene = newScene;
+        	
+        	this.scrubberPosX = 0;
+            this.updateAnimation((this.scrubberPosX / this.gridSize + 1));
+            $("#timelineScrubber").css("left", (this.scrubberPosX) + "px");
+            $("#scrubberLine").css("left", (this.scrubberPosX + 8) + "px");
+        	
+        	localStorage.setItem("activeScene", newScene);
+        	
+        	this.onInitStage(this.stage);
+        },
+        
         onAddObject:function(obj) {
             var currObj = obj;
             var depth = 0;
@@ -187,25 +204,48 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         /** Updates the selected Object with the new transformation and saves them to the current Keyframe*/
         onUpdateObject: function (displObj) {
             var keyframeId = this.scrubberPosX / this.gridSize;
-            if (displObj !== undefined && displObj !== null && this.stageObjects[displObj.getId()][this.activeScene] !== undefined) {
-                var keyframe = this.stageObjects[displObj.getId()][this.activeScene][keyframeId + 1];
-                if (keyframe !== undefined) {
-                    this.setValue(displObj.getX(), keyframe, "x");
-                    this.setValue(displObj.getY(), keyframe, "y");
-                    this.setValue(displObj.getRotation(), keyframe, "rotation");
-                    this.setValue(displObj.getRefX(), keyframe, "refX");
-                    this.setValue(displObj.getRefY(), keyframe, "refY");
-                    this.setValue(displObj.getZIndex(), keyframe, "zIndex");
-                    //this.setValue(displObj.getScaleX(), keyframe, "scaleX");
-                    //this.setValue(displObj.getScaleY(), keyframe, "scaleY");
-                    var bezier = this.linearBezier;
-                    if (keyframe["timingFunc"] != null) {
-                    	bezier = CubicBezier.readTimingFunc(keyframe["timingFunc"]);
-                    }
-                    this.calculateInbetween(displObj.getId(), keyframeId + 1, this.stageObjects[displObj.getId()][this.activeScene], this.activeScene, true, true, false, bezier);
-                    //stageObjectId, keyframePos, animParams, scene, searchBackward, searchForward) {
+            if (displObj != null) {
+            	if (this.stageObjects[displObj.getId()][this.activeScene] != null) {
+	                var keyframe = this.stageObjects[displObj.getId()][this.activeScene][keyframeId + 1];
+	                if (keyframe !== undefined) {
+	                    this.setValue(displObj.getX(), keyframe, "x");
+	                    this.setValue(displObj.getY(), keyframe, "y");
+	                    this.setValue(displObj.getRotation(), keyframe, "rotation");
+	                    this.setValue(displObj.getRefX(), keyframe, "refX");
+	                    this.setValue(displObj.getRefY(), keyframe, "refY");
+	                    this.setValue(displObj.getZIndex(), keyframe, "zIndex");
+	                    this.setValue(displObj.getWidth(), keyframe, "width");
+	                    this.setValue(displObj.getHeight(), keyframe, "height");
+	                    //this.setValue(displObj.getScaleX(), keyframe, "scaleX");
+	                    //this.setValue(displObj.getScaleY(), keyframe, "scaleY");
+	                    var bezier = this.linearBezier;
+	                    if (keyframe["timingFunc"] != null) {
+	                    	bezier = CubicBezier.readTimingFunc(keyframe["timingFunc"]);
+	                    }
+	                    this.calculateInbetween(displObj.getId(), keyframeId + 1, this.stageObjects[displObj.getId()][this.activeScene], this.activeScene, true, true, false, bezier);
+	                    //stageObjectId, keyframePos, animParams, scene, searchBackward, searchForward) {
+	                }
+	            }
+                if (keyframeId == 0) {
+                	if (this.stage["animations"][this.activeScene] == null) {
+                		this.stage["animations"][this.activeScene] = {};
+                	}
+                	this.stage["animations"][this.activeScene]["init"] = {};
+                	this.stage["animations"][this.activeScene]["init"][displObj.getId()] = displObj.getAnimParams();
                 }
             }
+        },
+        /**
+         * Returns the next animObj of this displObj 
+         */
+        findAnimObjParent:function(displObj) {
+        	if (displObj == null) {
+        		return this.stage;
+        	} else if (displObj instanceof AnimObject) {
+        		return displObj;
+        	} else {
+        		return this.findAnimObjParent(displObj.parent);
+        	}
         },
         /** Sets the Value of an updated object to that objects keyframe */
         setValue: function (val, keyframe, key) {
@@ -224,11 +264,21 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             // reinit the list elements
             this.objectInfoView.empty();
             this.timelineView.empty();
-            this.timelineView.append('<div id="scrubberLine" style="left: 8px;"></div>');
             this.scrubberStartX = $("#timelineScrubber")[0].offsetLeft;
             this.scrubberPosX = $("#timelineScrubber")[0].offsetLeft;
+            this.timelineView.append('<div id="scrubberLine" style="left: ' + (8 + this.scrubberPosX) + 'px;"></div>');
             
             this.initLayer(this.stage, -1);
+            
+            this.activeScene = Storage.getString("activeScene");
+		    // check if the active scene is valid
+		    if (this.activeScene == null) {
+		    	this.activeScene = "defaultAnimation";
+		    }
+        	for (var key in this.stage["animations"][this.activeScene]["init"]) {
+        		this.stageObjects[key].displObj.setAnimParams(this.stage["animations"][this.activeScene]["init"][key]);
+        	}
+        	
             this.initAnimations(this.stage);
             
             
@@ -263,10 +313,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                         var lastKeyframePos = -1;
                         var obj = displObj.findById(displObjId);
                         this.stageObjects[obj.getId()][currScene] = animParams; // stageObjects["armL"]["idle"]
-                        for (var keyframeId in animParams) { // iterate over the keyframes of each element
-                            var pos = parseInt(keyframeId);
-                            this.addKeyframe(obj, pos, animParams, currScene, true);
-                        }
+                        if (currScene == this.activeScene) {
+	                        for (var keyframeId in animParams) { // iterate over the keyframes of each element
+	                            var pos = parseInt(keyframeId);
+	                            this.addKeyframe(obj, pos, animParams, currScene, true);
+	                        }
+	                    }
                     }
                 }
             }
@@ -403,14 +455,16 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 if (animObj === undefined) {
                     animObj = this.stage;
                 }
-                if (animObj.animations[scene] !== undefined && (animObj.animations[scene]["tween"] === undefined || animObj.animations[scene]["tween"][stageObjectId] === undefined)) {
-                    if (animObj.animations[scene]["tween"] === undefined) {
-                        animObj.animations[scene]["tween"] = {};
-                    }
-                    animObj.animations[scene]["tween"][stageObjectId] = {};
-                    this.stageObjects[stageObjectId][scene] = animObj.animations[this.activeScene]["tween"][stageObjectId];
+                if (animObj.animations[scene] == undefined) {
+                	animObj.animations[scene] = {};
                 }
-            
+				if (animObj.animations[scene]["tween"] == null) {
+					animObj.animations[scene]["tween"] = {}
+				}
+				if (animObj.animations[scene]["tween"][stageObjectId] === undefined) {
+					animObj.animations[scene]["tween"][stageObjectId] = {};
+					this.stageObjects[stageObjectId][scene] = animObj.animations[this.activeScene]["tween"][stageObjectId];
+				}
                 this.stageObjects[stageObjectId][scene][keyframeId] = {}; // stageObjects["armL"]["idle"]
             }
             var keyframeNode = $('<div class="keyframe" style="left: ' + ((keyframeId - 1) * this.gridSize) + 'px;"></div>');

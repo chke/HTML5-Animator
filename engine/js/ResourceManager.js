@@ -1,4 +1,4 @@
-define(function() {
+define(["engine/util/Storage"], function(Storage) {
 
     function ResourceManager() {
 
@@ -18,14 +18,12 @@ define(function() {
 
     ResourceManager.addLocalResource = function(key, value) {
         ResourceManager.addResource(key, value);
-        if ('localStorage' in window && window['localStorage'] !== null) {
-            var localResources = JSON.parse(localStorage.getItem("resources"));
-            if (localResources == null) {
-                localResources = {};
-            }
-            localResources[key] = value;
-            localStorage.setItem("resources", JSON.stringify(localResources));
+        var localResources = JSON.parse(localStorage.getItem("resources"));
+        if (localResources == null) {
+            localResources = {};
         }
+        localResources[key] = value;
+        Storage.set("resources", localResources);
     }
     /**
      * Returns the resource by the given key
@@ -64,10 +62,10 @@ define(function() {
 
     ResourceManager.removeLocalResource = function(key) {
         ResourceManager.removeResource(key);
-        if ('localStorage' in window && window['localStorage'] !== null && localStorage.getItem("resources") !== null) {
-            var localResources = JSON.parse(localStorage.getItem("resources"));
-            delete localResources[key];
-            localStorage.setItem("resources", JSON.stringify(localResources));
+        var localResources = Storage.get("resources");
+        if (localResources != null) {
+        	delete localResources[key];
+        	Storage.set("resources", localResources);
         }
     }
 

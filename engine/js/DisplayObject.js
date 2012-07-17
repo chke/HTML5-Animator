@@ -25,7 +25,7 @@ define(['engine/Vector2d'], function(Vector2d) {
                     // Update element list length
                     DisplayObject.elementListLength = settings.id + 1;
                 }
-                DisplayObject.elementList["do" + settings.id] = (this);
+                DisplayObject.elementList[settings.id] = (this);
             }
 
             this.refX = (settings.refX == null) ? 0.5 : settings.refX;
@@ -119,7 +119,7 @@ define(['engine/Vector2d'], function(Vector2d) {
         if (this.id === undefined) {
             this.setId(DisplayObject.elementListLength);
             DisplayObject.elementListLength++;
-            DisplayObject.elementList["do" + this.id] = (this);
+            DisplayObject.elementList[this.id] = (this);
         }
         this.updateDom();
     }
@@ -256,20 +256,10 @@ define(['engine/Vector2d'], function(Vector2d) {
      */
     DisplayObject.prototype.toJSON = function() {
 
-        var str = {
-            name : this.name,
-            x : this.x,
-            y : this.y
-        };
-        var children = {};
-        for (key in this.children) {
-            children[key] = this.children[key].toJSON();
-        }
-        str["children"] = children;
+        var str = this.getAnimParams();
         str["id"] = this.id;
-        if (this.z !== undefined) {
-            str["z"] = this.z;
-        }
+        str["name"] = this.name;
+        
         if (this.refX !== undefined) {
             str["refX"] = this.refX;
         }
@@ -282,18 +272,57 @@ define(['engine/Vector2d'], function(Vector2d) {
         if (this.scaleY !== undefined) {
             str["scaleY"] = this.scaleY;
         }
-        if (this.rotation !== undefined) {
-            str["rotation"] = this.rotation;
+        
+        var children = {};
+        for (key in this.children) {
+            children[key] = this.children[key].toJSON();
         }
-        if (this.width !== undefined) {
-            str["width"] = this.getWidth();
-        }
-        if (this.height !== undefined) {
-            str["height"] = this.getHeight();
-        }
-
+        str["children"] = children;
+        
         return str;
 
+    }
+    
+    DisplayObject.prototype.getAnimParams = function() {
+    	var obj = {};
+    	
+        obj["x"] = this.x;
+        obj["y"] = this.y;
+        
+    	if (this.z !== undefined) {
+            obj["z"] = this.z;
+        }
+        if (this.rotation !== undefined) {
+            obj["rotation"] = this.rotation;
+        }
+        if (this.width !== undefined) {
+            obj["width"] = this.getWidth();
+        }
+        if (this.height !== undefined) {
+            obj["height"] = this.getHeight();
+        }
+        return obj;
+    }
+    
+    DisplayObject.prototype.setAnimParams = function(obj) {
+    	if (obj.z !== undefined) {
+            this.z = obj["z"];
+        }
+        if (obj.rotation !== undefined) {
+            this.setRotation(obj["rotation"]);
+        }
+        if (obj.width !== undefined) {
+            this.setWidth(obj["width"]);
+        }
+        if (obj.height !== undefined) {
+            this.setHeight(obj["height"]);
+        }
+        
+        this.x = obj["x"];
+        this.y = obj["y"];
+        
+        this.updateDom();
+        return obj;
     }
     /**
      * Returns the DisplayObject with the given id

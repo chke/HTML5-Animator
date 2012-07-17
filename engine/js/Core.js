@@ -1,5 +1,5 @@
 //require.config({"baseDir": "."});
-define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/ResourceManager"], function (AnimEn, AnimObject, DisplayObject, Sprite, ResourceManager) {
+define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/ResourceManager", "engine/util/Storage"], function (AnimEn, AnimObject, DisplayObject, Sprite, ResourceManager, Storage) {
 
     function Core() {
         
@@ -37,11 +37,11 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
         ResourceManager.addResource("leaf6", "leaves/leaf6.png");
         ResourceManager.addResource("leaf7", "leaves/leaf7.png");
         
-		
-		if ('localStorage' in window && window['localStorage'] !== null && localStorage.getItem("animation") !== null) {
-		    properties = JSON.parse(localStorage.getItem("animation"));
-		} else {
-		
+		if (Storage.supportsLocalStorage()) {
+			properties = Storage.get("animation");
+		}
+		if (properties == null) {
+			
 		properties = {
   "name": "",
   "x": 0,
@@ -449,9 +449,7 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
 };
 		}
 		
-		if ('localStorage' in window && window['localStorage'] !== null && localStorage.getItem("animation") !== null) {
-            localStorage.setItem("animation", JSON.stringify(properties));
-        }
+		Storage.set("animation", properties);
         
         for (var key in properties.children) {
             var animObj = this.createElement(properties.children[key]);

@@ -1,0 +1,29 @@
+
+#addScene {
+	background-image: url("../images/add.png");
+    background-position: 6px 50%;
+    background-repeat: no-repeat;
+    padding-left: 26px;
+}
+
+
+.editScene {
+	background-image: url("../images/save.png");
+    background-position: 50% 6px;
+    background-repeat: no-repeat;
+    padding-top: 22px;
+    background-size: 16px 16px;
+}
+.deleteScene {
+	background-image: url("../images/delete.png");
+    background-position: 50% 6px;
+    background-repeat: no-repeat;
+    padding-top: 22px;
+    background-size: 16px 16px;
+    position: absolute;
+    right: 4px;
+}
+
+.sceneitem {
+	height: 30px;
+}

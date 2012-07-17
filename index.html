@@ -39,6 +39,7 @@
 					 "widgets/MenuWidget",
 					 "widgets/ResourceWidget",
 					 "widgets/KeyframeWidget",
+					 "widgets/SceneWidget",
 					 "dijit/Dialog"], // "dijit/dijit-all", don't use
 			function(require, button, borderContainer, tabContainer, contentPane, menuItem, Tree, ForestStoreModel, ItemFileReadStore, array, config, kernel, json, locale, dom, domClass, domConstruct, parser, query, ready, animWidget, jsonViewWidget, layerWidget, AnimDetailsWidget, AnimTimelineWidget, MenuWidget) {
 				
@@ -76,6 +77,10 @@
 					dojo.place(keyfWid.domNode, "keyframeWidget");
 					keyfWid.startup();
 					
+					var sceneWid = new widgets.SceneWidget({});
+					dojo.place(sceneWid.domNode, "sceneWidget");
+					sceneWid.startup();
+					
 				});
 				
 			});
@@ -103,6 +108,10 @@
 				<div class="centerPanel" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'center', tabPosition: 'top'">
 					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Layer'"  selected="true">
 						<div id="layerWidget" >
+						</div>
+					</div>
+					<div data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title:'Scene'">
+						<div id="sceneWidget" >
 						</div>
 					</div>
 				</div>
