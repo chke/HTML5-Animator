@@ -138,6 +138,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
             dojo.subscribe("/layerwidget/updateLayerPosition", this, "onUpdateObjectLayers");
             dojo.subscribe("/menuwidget/addObject", this, "onAddObject");
             dojo.subscribe("/menuwidget/newProject", this, "onNewProject");
+            dojo.subscribe("/scenewidget/activatescene", this, "onActivateScene");
             
             
 
@@ -160,7 +161,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
         onRequestInitStage: function () {
             dojo.publish("/animwidget/initStage", [this.stage]);
         },
-		
+		onActivateScene:function() {
+			this.selectedObject = null;
+			this.setAnimObject(null);
+			
+			dojo.publish("/animwidget/initStage", [this.stage]);
+		},
 		/**
 		 * Creates a new object an adds it to the stage 
 		 */
@@ -185,10 +191,11 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		    this.deselect = false;
 		},
 		
+		
 		onNewProject: function() {
 		    this.setAnimObject(null);
 		    this.stage.removeAllChildren();
-		    this.stage.setAnimations({defaultAnim: {}});
+		    this.stage.setAnimations({});
 		    dojo.publish("/animwidget/initStage", [this.stage]);
 		},
 		

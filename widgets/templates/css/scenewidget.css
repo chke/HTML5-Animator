@@ -21,9 +21,27 @@
     padding-top: 22px;
     background-size: 16px 16px;
     position: absolute;
-    right: 4px;
+    right: 8px;
 }
 
 .sceneitem {
 	height: 30px;
+	margin-bottom: 2px;
+    width: 100%;
+}
+
+#sceneItems {
+	width: 100%;
+	border: 1px solid #797979;
+	margin-top: 4px;
+}
+
+#activeSceneBox {
+	margin-bottom: 16px;
+}
+
+.sceneitem:nth-child(odd) {
+	background-color: #EEEEEE;
+}
+.sceneitem:nth-child(even) {
 }

@@ -1,4 +1,4 @@
-define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/ResourceManager"], function (AnimObject, DisplayObject, Sprite, ResourceManager) {
+define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/ResourceManager", "engine/util/Storage"], function (AnimObject, DisplayObject, Sprite, ResourceManager, Storage) {
 
     function AnimEn() {
 	
@@ -45,7 +45,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 		if (this.domNode || this.canvasNode) {
 			
 			// Create the stage Object
-			this.stage = new AnimObject({"animations": { "defaultAnim": {} }});
+			this.stage = new AnimObject({"animations": { }});
 			this.animObjs.push(this.stage);
 			
 			
@@ -74,6 +74,28 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 			
 			gameLoopId = setTimeout(this.animationLoop, 1000 / this.fps);
 		}
+	}
+	
+	AnimEn.prototype.addScene = function(sceneName, properties) {
+		this.scenes[sceneName] = properties;
+	}
+	
+	AnimEn.prototype.setActiveScene = function(scene) {
+		this.activeScene = scene;
+		Storage.setString("activeScene", scene);
+		
+		this.stage.removeAllChildren();
+		this.stage.animations = {};
+		
+        for (var key in this.scenes[this.activeScene].children) {
+            var animObj = this.createElement(this.scenes[this.activeScene].children[key]);
+            this.stage.addChild(animObj);
+        }
+        this.stage.setAnimations(this.scenes[this.activeScene].animations);
+        
+		//this.stage = this.createElement(properties);
+		
+        this.lastKeyframe = this.findLastKeyframe();
 	}
 	
 	/**
@@ -124,13 +146,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	 * Returns all scenes of this animation 
 	 */
 	AnimEn.prototype.getAllScenes = function() {
-		var scenes = {};
-		for(var key in this.animObjs) {
-            for (var scene in this.animObjs[key].getAnimations()) {
-            	scenes[scene] = true;
-            }
-        }
-        return scenes;
+        return this.scenes;
 	}
 	
 	AnimEn.prototype.initAnimation = function() {
@@ -140,57 +156,40 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	    //var keyframeprefix = "-webkit-keyframes";//-webkit-keyframes
 	    var animTime = lastKeyframe / this.fps;
 	    
-	    this.scenes = this.getAllScenes();
-	    this.activeScene = localStorage.getItem("activeScene");
-	    // check if the active scene is valid
-	    if (this.activeScene == null || this.scenes[this.activeScene] == null) {
-	    	this.activeScene = "defaultAnimation";
-	    }
-	    
-	    for (var key in this.stage["animations"][this.activeScene]["init"]) {
-    		this.stage.getElementById(key).setAnimParams(this.stage["animations"][this.activeScene]["init"][key]);
-    	}
+	    this.loadActiveScene();
 	    
 	    for(var key in this.animObjs) {
-            var scene = this.animObjs[key].getAnimations()[this.activeScene]["tween"];
-            for(var keyObj in scene) {
-                var displayObj = this.animObjs[key].findById(parseInt(keyObj));
-                var obj = scene[keyObj];
-                var animName = "Animation" + keyObj;
-                var keyframes = '@' + prefix + "keyframes " + animName + ' { ';
-                
-                for(var keyKeyframe in obj) {
-                    
-                    var kfPercent = Math.floor((parseInt(keyKeyframe) - 1) / lastKeyframe * 100);
-                    keyframes += this.createKeyframe(animName, obj[keyKeyframe], kfPercent, prefix, displayObj);
-                    
+            for (var sceneKey in this.animObjs[key].getAnimations()) {
+            	var scene = this.animObjs[key].getAnimations()["tween"];
+	            for(var keyObj in scene) {
+	                var displayObj = this.animObjs[key].findById(parseInt(keyObj));
+	                var obj = scene[keyObj];
+	                var animName = "Animation" + keyObj;
+	                var keyframes = '@' + prefix + "keyframes " + animName + ' { ';
 	                
+	                for(var keyKeyframe in obj) {
+	                    
+	                    var kfPercent = Math.floor((parseInt(keyKeyframe) - 1) / lastKeyframe * 100);
+	                    keyframes += this.createKeyframe(animName, obj[keyKeyframe], kfPercent, prefix, displayObj);
+	                    
+		                
+		            }
+		            
+		            keyframes += '} ';
+		            
+	                if(document.styleSheets && document.styleSheets.length) {
+	                    document.styleSheets[0].insertRule(keyframes, 0);
+	                } else {
+	                    var s = document.createElement('style');
+	                    s.innerHTML = keyframes;
+	                    document.getElementsByTagName( 'head' )[0].appendChild(s);
+	        
+	                }
+	                this.animObjs[key].addAnimation(displayObj, animName, animTime, sceneKey);
+	                console.log(keyframes);
 	            }
-	            
-	            keyframes += '} ';
-	            
-	            //keyframes = "@-moz-keyframes Animation1 { 1% { -moz-transform:rotate( 0deg ) ; left:0px; top:0px; } 100% { -moz-transform:rotate( 0deg ) ; left:0px; top:0px; } 50% { -moz-transform:rotate( 12deg ) ; left:0px; top:0px; } }";
-	            //keyframes = "@-moz-keyframes Animation17 { 0% { -moz-transform:rotate( 0deg ) ; -moz-animation-timing-function: cubic-bezier(0, 1, 0, 1); left:-4px; top:3px; } 100% { -moz-transform:rotate( 0deg ) ; -moz-animation-timing-function: cubic-bezier(0, 0, 0, 0); left:0px; top:5px; } 49% { -moz-animation-timing-function: ease-in; -moz-transform:rotate( 0deg ) ; left:556px; top:0px; } }";
-	            
-	            
-                if(document.styleSheets && document.styleSheets.length) {
-                    document.styleSheets[0].insertRule(keyframes, 0);
-                } else {
-                    var s = document.createElement('style');
-                    s.innerHTML = keyframes;
-                    document.getElementsByTagName( 'head' )[0].appendChild(s);
-        
-                }
-                this.animObjs[key].addAnimation(displayObj, animName, animTime);
-                console.log(keyframes);
-                
-                
-                /*displayObj.domNode.style.MozAnimation = animName + " " + animTime + "s linear infinite";
-                displayObj.domNode.style.WebkitAnimation = animName + " " + animTime + "s linear infinite";
-                displayObj.domNode.style.Animation = animName + " " + animTime + "s linear infinite";
-                console.log(keyframes);*/
-            }
-            this.animObjs[key].play();
+	        }
+            this.animObjs[key].play(this.activeScene);
             //this.animObjs[key].stop();
 	    }
 	    
@@ -245,16 +244,24 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 
 	    
 	}
-	
+	AnimEn.prototype.loadActiveScene = function() {
+	    this.scenes = this.getAllScenes();
+	    this.activeScene = Storage.getString("activeScene");
+	    // check if the active scene is valid
+	    if (this.activeScene == null || this.scenes[this.activeScene] == null) {
+	    	this.activeScene = "defaultAnim";
+	    }
+	}
 	/**
 	 * returns the last keyframe position to determine the length of the animation 
 	 */
 	AnimEn.prototype.findLastKeyframe = function() {
 	    var maxKf = 0;
+	    this.loadActiveScene();
 	    for(var key in this.animObjs) {
 	        var animations = this.animObjs[key].getAnimations();
 	        if (animations != null) {
-                var scene = animations[this.activeScene]["tween"];
+                var scene = animations["tween"];
                 for(var keyObj in scene) {
                     var obj = scene[keyObj];
                     for(var keyKeyframe in obj) {

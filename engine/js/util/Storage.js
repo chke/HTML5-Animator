@@ -29,6 +29,12 @@ define(function() {
             localStorage.setItem(key, JSON.stringify(value));
 		}
     }
-
+    
+	Storage.setString = function(key, value) {
+		if (Storage.supportsLocalStorage()) {
+            localStorage.setItem(key, value);
+		}
+    }
+    
 	return Storage;
 });

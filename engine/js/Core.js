@@ -43,6 +43,7 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
 		if (properties == null) {
 			
 		properties = {
+			"defaultAnim": {
   "name": "",
   "x": 0,
   "y": 0,
@@ -173,7 +174,6 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
                           "width": 100,
                           "height": 100,
                           "animations": {
-                            "defaultAnim": {
                               "tween": {
                                 "10": {
                                   "1": {
@@ -305,7 +305,6 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
                                   }
                                 }
                               }
-                            }
                           }
                         }
                       },
@@ -341,7 +340,6 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
           "width": 100,
           "height": 100,
           "animations": {
-            "defaultAnim": {
               "tween": {
                 "4": {
                   "1": {
@@ -390,7 +388,6 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
                   }
                 }
               }
-            }
           }
         },
         "ship": {
@@ -418,7 +415,6 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
   "refX": 0.5,
   "refY": 0.5,
   "animations": {
-    "defaultAnim": {
       "tween": {
         "1": {
           "1": {
@@ -444,22 +440,25 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
           }
         }
       }
-    }
   }
+}
 };
 		}
 		
 		Storage.set("animation", properties);
         
-        for (var key in properties.children) {
-            var animObj = this.createElement(properties.children[key]);
-            this.stage.addChild(animObj);
-        }
-        this.stage.setAnimations(properties.animations);
         
-		//this.stage = this.createElement(properties);
-		
-        this.lastKeyframe = this.findLastKeyframe();
+        
+        for (var sceneKey in properties) {
+        	this.addScene(sceneKey, properties[sceneKey]);
+        }
+        
+        this.activeScene = Storage.getString("activeScene");
+        if (this.activeScene == null) {
+        	this.activeScene = "defaultAnim";
+        }
+        this.setActiveScene(this.activeScene);
+        
 	}
 	
 	

@@ -10,7 +10,7 @@ define(['engine/DisplayObject'], function(DisplayObject) {
         this.type = 'AnimObject';
  		this._super = DisplayObject.prototype;
  		
-        this.animations = {defaultAnim: {}};
+        this.animations = {};
         if (settings.animations != null) {
             this.animations = settings.animations;
         }
@@ -71,16 +71,15 @@ define(['engine/DisplayObject'], function(DisplayObject) {
         str["animations"] = this.animations;
 		return str;
 	}
- 
-    AnimObject.prototype.play = function() {
-        
-    }
     
-    AnimObject.prototype.addAnimation = function(displObj, animName, animTime) {
+    AnimObject.prototype.addAnimation = function(displObj, animName, animTime, scene) {
+    	if (this.animationList == null) {
+    		this.animationList = [];
+    	}
     	this.animationList.push({displObj: displObj, animName: animName, animTime:animTime});
     }
     
-    AnimObject.prototype.play = function() {
+    AnimObject.prototype.play = function(scene) {
     	for (var i=0; i < this.animationList.length; i++) {
     		var displObj = this.animationList[i].displObj;
     		var animName = this.animationList[i].animName;

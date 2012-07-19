@@ -44,8 +44,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             dojo.subscribe("/layerwidget/updateLayerPosition", this, "onUpdateLayerPosition");
             dojo.subscribe("/layerwidget/updateObject", this, "onChangeObject");
             dojo.subscribe("/keyframewidget/updateinbetweens", this, "updateInbetweens");
-            dojo.subscribe("/sceneitem/activatescene", this, "onActivateScene");
-            
+            dojo.subscribe("/scenewidget/activatescene", this, "onActivateScene");
+            dojo.subscribe("/scenewidget/deletescene", this, "onDeleteScene");
             
             if (!this.stageInitialized) {
                 dojo.publish("/animtimelinewidget/requestInitStage", []);
@@ -117,18 +117,28 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 tlHeader.append("<span>" + val + "</span>");
             }
         },
+        onDeleteScene: function(sceneKey) {
+        	for (key in this.stageObjects) {
+        		if (this.stageObjects[key].displObj.getAnimations != null
+        			&& this.stageObjects[key].displObj.getAnimations()[sceneKey] != null) {
+        			delete this.stageObjects[key].displObj.getAnimations()[sceneKey];
+        		}
+        	}
+        	this.updateAnimation(this.keyframePos);
+        },
         /**
          * This Method is called when the Active Scene has changed and initializes the animations with the new scene
          */
         onActivateScene:function(newScene) {
         	this.activeScene = newScene;
         	
+        	
         	this.scrubberPosX = 0;
             this.updateAnimation((this.scrubberPosX / this.gridSize + 1));
             $("#timelineScrubber").css("left", (this.scrubberPosX) + "px");
             $("#scrubberLine").css("left", (this.scrubberPosX + 8) + "px");
         	
-        	localStorage.setItem("activeScene", newScene);
+        	Storage.setString("activeScene", newScene);
         	
         	this.onInitStage(this.stage);
         },
@@ -176,7 +186,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             }
         },
         updateInbetweens: function(bezier, displObj, keyframeId) {
-        	this.calculateInbetween(displObj.getId(), keyframeId, this.stageObjects[displObj.getId()][this.activeScene], this.activeScene, false, true, false, bezier);
+        	this.calculateInbetween(displObj.getId(), keyframeId, this.stageObjects[displObj.getId()]["tween"], this.activeScene, false, true, false, bezier);
         },
         
         onChangeObject:function(change, displObj) {
@@ -205,8 +215,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         onUpdateObject: function (displObj) {
             var keyframeId = this.scrubberPosX / this.gridSize;
             if (displObj != null) {
-            	if (this.stageObjects[displObj.getId()][this.activeScene] != null) {
-	                var keyframe = this.stageObjects[displObj.getId()][this.activeScene][keyframeId + 1];
+            	if (this.stageObjects[displObj.getId()] != null && this.stageObjects[displObj.getId()]["tween"] != null) {
+	                var keyframe = this.stageObjects[displObj.getId()]["tween"][keyframeId + 1];
 	                if (keyframe !== undefined) {
 	                    this.setValue(displObj.getX(), keyframe, "x");
 	                    this.setValue(displObj.getY(), keyframe, "y");
@@ -222,17 +232,10 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 	                    if (keyframe["timingFunc"] != null) {
 	                    	bezier = CubicBezier.readTimingFunc(keyframe["timingFunc"]);
 	                    }
-	                    this.calculateInbetween(displObj.getId(), keyframeId + 1, this.stageObjects[displObj.getId()][this.activeScene], this.activeScene, true, true, false, bezier);
+	                    this.calculateInbetween(displObj.getId(), keyframeId + 1, this.stageObjects[displObj.getId()]["tween"], this.activeScene, true, true, false, bezier);
 	                    //stageObjectId, keyframePos, animParams, scene, searchBackward, searchForward) {
 	                }
 	            }
-                if (keyframeId == 0) {
-                	if (this.stage["animations"][this.activeScene] == null) {
-                		this.stage["animations"][this.activeScene] = {};
-                	}
-                	this.stage["animations"][this.activeScene]["init"] = {};
-                	this.stage["animations"][this.activeScene]["init"][displObj.getId()] = displObj.getAnimParams();
-                }
             }
         },
         /**
@@ -275,9 +278,6 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 		    if (this.activeScene == null) {
 		    	this.activeScene = "defaultAnimation";
 		    }
-        	for (var key in this.stage["animations"][this.activeScene]["init"]) {
-        		this.stageObjects[key].displObj.setAnimParams(this.stage["animations"][this.activeScene]["init"][key]);
-        	}
         	
             this.initAnimations(this.stage);
             
@@ -288,11 +288,11 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         updateAnimation: function (keyframePos) {
             for (var key in this.stageObjects) {
                 var obj = this.stageObjects[key]; // Iterate over all stage elemets
-                if (obj[this.activeScene]) {
-                    if (obj[this.activeScene][keyframePos]) {
-                        dojo.publish("/animtimelinewidget/updateObject", [obj[this.activeScene][keyframePos], obj.displObj]);
+                if (obj["tween"]) {
+                    if (obj["tween"][keyframePos]) {
+                        dojo.publish("/animtimelinewidget/updateObject", [obj["tween"][keyframePos], obj.displObj]);
                     } else {
-                        dojo.publish("/animtimelinewidget/updateObject", [obj["inbetween"][this.activeScene][keyframePos], obj.displObj]);
+                        dojo.publish("/animtimelinewidget/updateObject", [obj["inbetween"][keyframePos], obj.displObj]);
                     }
                 }
             }
@@ -303,22 +303,14 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             if (displObj instanceof AnimObject) {
                 
                 //this.stageObjects[displObj.getId()] = {};
-                for (var currScene in displObj.animations) { // iterate the scenes
-                    if (this.activeScene === undefined) {
-                        this.activeScene = currScene;
-                    }
-                    var scene = displObj.animations[currScene];
-                    for (var displObjId in scene.tween) { // iterate over the elements in the scene
-                        var animParams = scene.tween[displObjId];
-                        var lastKeyframePos = -1;
-                        var obj = displObj.findById(displObjId);
-                        this.stageObjects[obj.getId()][currScene] = animParams; // stageObjects["armL"]["idle"]
-                        if (currScene == this.activeScene) {
-	                        for (var keyframeId in animParams) { // iterate over the keyframes of each element
-	                            var pos = parseInt(keyframeId);
-	                            this.addKeyframe(obj, pos, animParams, currScene, true);
-	                        }
-	                    }
+                for (var displObjId in displObj.animations.tween) { // iterate over the elements in the scene
+                    var animParams = displObj.animations.tween[displObjId];
+                    var lastKeyframePos = -1;
+                    var obj = displObj.findById(displObjId);
+                    this.stageObjects[obj.getId()]["tween"] = animParams;
+                    for (var keyframeId in animParams) { // iterate over the keyframes of each element
+                        var pos = parseInt(keyframeId);
+                        this.addKeyframe(obj, pos, animParams, this.activeScene, true);
                     }
                 }
             }
@@ -336,11 +328,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             if (this.stageObjects[stageObjectId]["inbetween"] === undefined) {
                 this.stageObjects[stageObjectId]["inbetween"] = {};
             }
-            if (this.stageObjects[stageObjectId]["inbetween"][scene] === undefined) {
-                this.stageObjects[stageObjectId]["inbetween"][scene] = {};
-            }
+            
             var lastKeyframe = 99;
-            var inbetween = this.stageObjects[stageObjectId]["inbetween"][scene];
+            var inbetween = this.stageObjects[stageObjectId]["inbetween"];
             var j;
             for (var key in animParams[keyframeId]) { // iterate over the animTypes (rotation)
                 if (key != "timingFunc") {
@@ -395,13 +385,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 	                        var val = 0;
 	                        
 	                        this.setInbetweenValue(startPos, keyframeId, animParams, inbetween, key, dif, bezier);
-	                        /*for (var i = startPos + 1; i < keyframeId; i++) {
-	                            val = val + difEach;
-	                            if (inbetween[i] === undefined) {
-	                                inbetween[i] = {};
-	                            }
-	                            inbetween[i][key] = animParams[startPos][key] + val;
-	                        }*/
+	                        
 	                    }
 	                    if (endPos > 0) {
 	                        var dif = animParams[endPos][key] - animParams[keyframeId][key];
@@ -410,13 +394,6 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 	                        
 	                        this.setInbetweenValue(keyframeId, endPos, animParams, inbetween, key, dif, bezier);
 	                        
-	                        /*for (var i = keyframeId + 1; i < endPos; i++) {
-	                            val = val + difEach;
-	                            if (inbetween[i] === undefined) {
-	                                inbetween[i] = {};
-	                            }
-	                            inbetween[i][key] = animParams[keyframeId][key] + val;
-	                        }*/
 	                    }
 	                }
                 }
@@ -441,8 +418,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             }
             if (keyframeId >= 1 && animParams !== undefined) {
             	var bezier = this.linearBezier;
-            	if (this.stageObjects[stageObjectId][scene][keyframeId] != null && this.stageObjects[stageObjectId][scene][keyframeId]["timingFunc"] != null) {
-                	bezier = CubicBezier.readTimingFunc(this.stageObjects[stageObjectId][scene][keyframeId]["timingFunc"]);
+            	if (this.stageObjects[stageObjectId]["tween"][keyframeId] != null && this.stageObjects[stageObjectId]["tween"][keyframeId]["timingFunc"] != null) {
+                	bezier = CubicBezier.readTimingFunc(this.stageObjects[stageObjectId]["tween"][keyframeId]["timingFunc"]);
                 }
             	
                 this.calculateInbetween(stageObjectId, keyframeId, animParams, scene, true, !init, false, bezier); // if the keyframes are initialized the keyframes don't need to be searched forwards
@@ -455,17 +432,17 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 if (animObj === undefined) {
                     animObj = this.stage;
                 }
-                if (animObj.animations[scene] == undefined) {
-                	animObj.animations[scene] = {};
+                if (animObj.animations == undefined) {
+                	animObj.animations = {};
                 }
-				if (animObj.animations[scene]["tween"] == null) {
-					animObj.animations[scene]["tween"] = {}
+				if (animObj.animations["tween"] == null) {
+					animObj.animations["tween"] = {}
 				}
-				if (animObj.animations[scene]["tween"][stageObjectId] === undefined) {
-					animObj.animations[scene]["tween"][stageObjectId] = {};
-					this.stageObjects[stageObjectId][scene] = animObj.animations[this.activeScene]["tween"][stageObjectId];
+				if (animObj.animations["tween"][stageObjectId] === undefined) {
+					animObj.animations["tween"][stageObjectId] = {};
+					this.stageObjects[stageObjectId]["tween"] = animObj.animations["tween"][stageObjectId];
 				}
-                this.stageObjects[stageObjectId][scene][keyframeId] = {}; // stageObjects["armL"]["idle"]
+                this.stageObjects[stageObjectId]["tween"][keyframeId] = {}; // stageObjects["armL"]["idle"]
             }
             var keyframeNode = $('<div class="keyframe" style="left: ' + ((keyframeId - 1) * this.gridSize) + 'px;"></div>');
             keyframeNode.on("mousedown", this, function (e) {
@@ -508,8 +485,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 var obj = this.findStageObjectByKeyframe(this.selectedKeyframe);
                 
                 if (obj["timelineNode"] != null && obj["timelineNode"][0] == kfParent) {
-                    if (obj[this.activeScene] != null) {
-                        var keyframes = obj[this.activeScene];
+                    if (obj["tween"] != null) {
+                        var keyframes = obj["tween"];
                         var kfPos = this.fitToGrid(this.selectedKeyframe.offsetLeft);
                         var kfId = kfPos / this.gridSize + 1;
                         
@@ -541,8 +518,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 }
                 
                 if (obj["timelineNode"] != null && obj["timelineNode"][0] == kfParent) {
-                    if (obj[this.activeScene] != null) {
-                        var keyframes = obj[this.activeScene];
+                    if (obj["tween"] != null) {
+                        var keyframes = obj["tween"];
                         var kfPos = this.fitToGrid(this.keyframePos); // The id of the keyframe ist the original position
                         var newKfPos = this.fitToGrid(this.selectedKeyframe.offsetLeft);
                         var kfId = kfPos / this.gridSize + 1;
@@ -579,12 +556,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                     var keyframeId = pos / that.gridSize;
                     var obj = that.findStageObjectByKeyframe(that.selectedKeyframe);
                     if (event.data.displObj != null && (that.stageObjects[event.data.displObj.getId()] == null 
-                    	|| that.stageObjects[event.data.displObj.getId()][that.activeScene] == null || that.stageObjects[event.data.displObj.getId()][that.activeScene][keyframeId] == null)) {
+                    	|| that.stageObjects[event.data.displObj.getId()]["tween"] == null || that.stageObjects[event.data.displObj.getId()]["tween"][keyframeId] == null)) {
 	                    if (that.stageObjects[event.data.displObj.getId()] == null) {
 	                        that.stageObjects[event.data.displObj.getId()] = {};
-	                        that.stageObjects[event.data.displObj.getId()][that.activeScene] = {};
+	                        that.stageObjects[event.data.displObj.getId()]["tween"] = {};
 	                    }
-	                    that.addKeyframe(event.data.displObj, keyframeId, that.stageObjects[event.data.displObj.getId()][that.activeScene], that.activeScene, false);
+	                    that.addKeyframe(event.data.displObj, keyframeId, that.stageObjects[event.data.displObj.getId()]["tween"], that.activeScene, false);
                 	}
                 });
                 
@@ -660,7 +637,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 		dojo.publish("/animtimelinewidget/selectKeyframe", [null, 0, null]);
                 	} else {
                 		dojo.addClass(this.selectedKeyframe, "selected");
-                		dojo.publish("/animtimelinewidget/selectKeyframe", [obj.displObj, (this.keyframeX / this.gridSize + 1), obj[this.activeScene]]);
+                		dojo.publish("/animtimelinewidget/selectKeyframe", [obj.displObj, (this.keyframeX / this.gridSize + 1), obj["tween"]]);
                 	}
                 	
                 }
