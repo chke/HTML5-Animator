@@ -18,6 +18,9 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
     	
     	this.animObjs = [];
     	
+    	this.animationNode = document.createElement('style');
+        document.getElementsByTagName('head')[0].appendChild(this.animationNode);
+    	
     	this.scenes = {};
 	
 	}
@@ -76,10 +79,25 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 		}
 	}
 	
+	/**
+	 * Add a scene to the engine this scene will not be loaded directly
+	 * @param scneneName Name of the scene
+	 * @param properties Settings of the scene 
+	 */
 	AnimEn.prototype.addScene = function(sceneName, properties) {
 		this.scenes[sceneName] = properties;
 	}
+	/**
+	 * Deletes a scene 
+	 */
+	AnimEn.prototype.deleteScene = function(sceneName) {
+		delete this.scenes[sceneName];
+	}
 	
+	/**
+	 * Sets the active scene to the given one and initializes the stage and the new animations
+	 * @param scene Given scene to be loaded 
+	 */
 	AnimEn.prototype.setActiveScene = function(scene) {
 		this.activeScene = scene;
 		Storage.setString("activeScene", scene);
@@ -96,6 +114,8 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 		//this.stage = this.createElement(properties);
 		
         this.lastKeyframe = this.findLastKeyframe();
+        
+        this.initAnimation(false);
 	}
 	
 	/**
@@ -149,7 +169,11 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         return this.scenes;
 	}
 	
-	AnimEn.prototype.initAnimation = function() {
+	/**
+	 * Initializes the animation of the current scene
+	 * @param playAnim True when the Animation should be played afer initialisation
+	 */
+	AnimEn.prototype.initAnimation = function(playAnim) {
 	    var lastKeyframe = this.findLastKeyframe() - 1;
 	    // Set the current vendor Prefix
 	    var prefix = "-" + this.getVendorPrefix().toLowerCase() + "-";
@@ -157,7 +181,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	    var animTime = lastKeyframe / this.fps;
 	    
 	    this.loadActiveScene();
-	    
+	    var animation = [];
 	    for(var key in this.animObjs) {
             for (var sceneKey in this.animObjs[key].getAnimations()) {
             	var scene = this.animObjs[key].getAnimations()["tween"];
@@ -168,31 +192,59 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	                var keyframes = '@' + prefix + "keyframes " + animName + ' { ';
 	                
 	                for(var keyKeyframe in obj) {
-	                    
 	                    var kfPercent = Math.floor((parseInt(keyKeyframe) - 1) / lastKeyframe * 100);
 	                    keyframes += this.createKeyframe(animName, obj[keyKeyframe], kfPercent, prefix, displayObj);
-	                    
-		                
 		            }
 		            
-		            keyframes += '} ';
-		            
-	                if(document.styleSheets && document.styleSheets.length) {
-	                    document.styleSheets[0].insertRule(keyframes, 0);
-	                } else {
-	                    var s = document.createElement('style');
-	                    s.innerHTML = keyframes;
-	                    document.getElementsByTagName( 'head' )[0].appendChild(s);
-	        
-	                }
+		            keyframes += '} \n';
+		            animation.push(keyframes);
 	                this.animObjs[key].addAnimation(displayObj, animName, animTime, sceneKey);
 	                console.log(keyframes);
 	            }
 	        }
-            this.animObjs[key].play(this.activeScene);
+			if (playAnim) {
+				this.animObjs[key].play(this.activeScene);
+			}
             //this.animObjs[key].stop();
 	    }
+	    for (var i=this.animationNode.sheet.cssRules.length - 1; i >= 0 ; i--) {
+	    	this.animationNode.sheet.deleteRule(i);
+	    }
 	    
+	    for (var i=0; i < animation.length; i++) {
+	    	this.animationNode.sheet.insertRule(animation[i], 0);
+	    }
+	}
+	
+	/**
+	 * Play the animation of the current scene 
+	 */
+	AnimEn.prototype.play = function(duration) {
+		if (duration == null) {
+			duration = "";
+		}
+		for(var key in this.animObjs) {
+			this.animObjs[key].play(duration);
+		}
+		lastKeyframe = this.findLastKeyframe();
+		if (duration != "infinite") {
+			var time = (1000 * lastKeyframe) / this.fps;
+			var func = function(animEn) {
+				return function() {
+					animEn.stop();
+				};
+			}.call(this, this);
+			this.playTimer = setTimeout(func, time);
+		}
+	}
+	/**
+	 * Stop the animation of the current scene 
+	 */
+	AnimEn.prototype.stop = function() {
+		clearTimeout(this.playTimer);
+		for(var key in this.animObjs) {
+			this.animObjs[key].stop();
+		}
 	}
 	
     AnimEn.prototype.getVendorPrefix = function() {

@@ -13,6 +13,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 			dojo.subscribe("/animwidget/initStage", this, "onInitStage");
 			dojo.subscribe("/sceneitem/activatescene", this, "onActivateScene");
 			dojo.subscribe("/sceneitem/deletescene", this, "onDeleteScene");
+			dojo.subscribe("/animwidget/resetScenes", this, "onResetScenes");
 			dojo.create("link", {
 				rel : "stylesheet",
 				href : "./widgets/templates/css/scenewidget.css"
@@ -25,6 +26,17 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
             if (!this.stageInitialized) {
                 dojo.publish("/animtimelinewidget/requestInitStage", []);
             }
+		},
+		onResetScenes: function(scene) {
+			for(var key in this.sceneItems) {
+				this.sceneItems[key].destroyRecursive(false);
+			}
+			sceneItems = {};
+			this.activeScene = scene;
+			this.scenes[this.activeScene] = {};
+		    Storage.setString("activeScene", this.activeScene);
+			this.initScenes();
+			this.onActivateScene(scene);
 		},
 		/**
 		 * Initializes the stage and creates the scenes 

@@ -7,7 +7,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
         jsonStr: "fdgd",
         activeScene: null,
         scenes: null,
-        templateString: "<div><textarea id='jsonEditor' style='height: 98%; width: 100%;'>${jsonStr}</textarea></div>",
+        templateString: "<div style='height: 98%; width: 100%;'><textarea id='jsonEditor' style='height: 98%; width: 100%;'>${jsonStr}</textarea></div>",
         
 		postCreate: function() {
 			var that = this;

@@ -35,10 +35,16 @@
 	background-color: #a3a3a3;
 }
 
-#playPauseAnimation {
+#playAnimation {
 	background-image: url("../images/play.png");
 	background-repeat: no-repeat;
 }
+
+#playAnimationNewWindow {
+	background-image: url("../images/playWindow.png");
+	background-repeat: no-repeat;
+}
+
 #stopAnimation {
 	background-image: url("../images/stop.png");
 	background-repeat: no-repeat;

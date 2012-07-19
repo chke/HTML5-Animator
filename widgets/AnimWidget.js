@@ -139,9 +139,10 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
             dojo.subscribe("/menuwidget/addObject", this, "onAddObject");
             dojo.subscribe("/menuwidget/newProject", this, "onNewProject");
             dojo.subscribe("/scenewidget/activatescene", this, "onActivateScene");
+            dojo.subscribe("/menuwidget/playAnimation", this, "onPlayAnimation");
+            dojo.subscribe("/animtimelinewidget/playAnimation", this, "onPlayAnimation");
+            dojo.subscribe("/animtimelinewidget/stopAnimation", this, "onStopAnimation");
             
-            
-
 		},
 		startup : function() {
 		    Core.init(document.getElementById("engine"), "dom", Core);
@@ -155,8 +156,20 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
             dojo.subscribe("/animtimelinewidget/requestInitStage", this, "onRequestInitStage");
             dojo.publish("/animwidget/initStage", [this.stage]);
 		},
-		
-		
+		/**
+		 * Is called when the animation should be played 
+		 */
+		onPlayAnimation:function() {
+			this.setAnimObject(null);
+			AnimEn.getInst().initAnimation(false);
+			AnimEn.getInst().play();
+		},
+		/**
+		 * Is called when the animation should be stopped 
+		 */
+		onStopAnimation:function() {
+			AnimEn.getInst().stop();
+		},
 		
         onRequestInitStage: function () {
             dojo.publish("/animwidget/initStage", [this.stage]);
@@ -190,13 +203,20 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		    dojo.publish("/animwidget/addObject", [newObj]);
 		    this.deselect = false;
 		},
-		
-		
+		/**
+		 * Initializes the new scene to start a new Project 
+		 */
 		onNewProject: function() {
+			for(var key in AnimEn.getInst().getAllScenes()) {
+				AnimEn.getInst().deleteScene(key);
+			}
 		    this.setAnimObject(null);
 		    this.stage.removeAllChildren();
 		    this.stage.setAnimations({});
+		    this.activeScene = "defaultAnim";
+		    dojo.publish("/animwidget/resetScenes", [this.activeScene]);
 		    dojo.publish("/animwidget/initStage", [this.stage]);
+		    dojo.publish("/animwidget/update", [this.stage]);
 		},
 		
 		/**

@@ -1,4 +1,4 @@
-require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "engine/util/CubicBezier", "engine/util/Storage", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject, CubicBezier, Storage) {
+require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "engine/util/CubicBezier", "engine/util/Storage", "engine/AnimEn", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject, CubicBezier, Storage, AnimEn) {
 
     return declare("widgets.AnimTimelineWidget", [_Widget, _TemplatedMixin], {
         MOUSE_BUTTON_RIGHT: 2,
@@ -50,6 +50,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             if (!this.stageInitialized) {
                 dojo.publish("/animtimelinewidget/requestInitStage", []);
             }
+            dojo.connect(dojo.byId("playAnimation"), "click", this, this.onPlayAnimation);
+            dojo.connect(dojo.byId("stopAnimation"), "click", this, this.onStopAnimation);
+            
         },
         
         
@@ -116,6 +119,53 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 }
                 tlHeader.append("<span>" + val + "</span>");
             }
+        },
+        /**
+         * Handles the click on the play button 
+         */
+        onPlayAnimation: function() {
+        	this.playTimeline();
+        	dojo.publish("/animtimelinewidget/playAnimation", []);
+        },
+        /**
+         * Handles the click on the stop button 
+         */
+        onStopAnimation: function() {
+        	this.stopTimeline();
+        	dojo.publish("/animtimelinewidget/stopAnimation", []);
+        },
+        /**
+         * Shows the moving scrubber on the timeline 
+         */
+        playTimeline: function() {
+        	this.isPlayingAnimation = true;
+        	var lastKeyframe = AnimEn.getInst().findLastKeyframe();
+        	this.scrubberPosX = 0;
+        	var func = function(timelineWidget) {
+				return function() {
+					if (lastKeyframe != (timelineWidget.scrubberPosX / timelineWidget.gridSize)) {
+						timelineWidget.scrubberPosX = timelineWidget.fitToGrid(timelineWidget.scrubberPosX + timelineWidget.gridSize);
+					} else {
+						timelineWidget.scrubberPosX = 0;
+						timelineWidget.stopTimeline();
+					}
+	                $("#timelineScrubber").css("left", (timelineWidget.scrubberPosX) + "px");
+	                $("#scrubberLine").css("left", (timelineWidget.scrubberPosX + 8) + "px");
+				};
+			}.call(this, this);
+        	var time = 1000 / AnimEn.getInst().fps;
+        	this.playTimer = setInterval(func, time);
+        	
+        },
+        /**
+         * Stops the timeline animation and resets the scrubber to the start 
+         */
+        stopTimeline: function() {
+        	this.isPlayingAnimation = false;
+        	clearInterval(this.playTimer);
+        	this.scrubberPosX = 0;
+        	$("#timelineScrubber").css("left", 0 + "px");
+	        $("#scrubberLine").css("left", 8 + "px");
         },
         onDeleteScene: function(sceneKey) {
         	for (key in this.stageObjects) {
@@ -528,8 +578,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                         if (newKfId != kfId) {
                         	delete keyframes[kfId];
                         	var bezier = this.linearBezier;
-                        	if (keyframe["timingFunc"] != null) {
-		                    	bezier = CubicBezier.readTimingFunc(keyframe["timingFunc"]);
+                        	if (keyframes[newKfId]["timingFunc"] != null) {
+		                    	bezier = CubicBezier.readTimingFunc(keyframes[newKfId]["timingFunc"]);
 		                    }
                         	this.calculateInbetween(obj.displObj.getId(), newKfId, keyframes, this.activeScene, true, true, false, bezier);
                         }
