@@ -3,6 +3,13 @@
 	display: block;
 	
 }
+#engine {
+	position: absolute;
+	display: block;
+	top: 0;
+	left: 0;
+	
+}
 #engine div, #engine img {
 	-moz-user-select: none;
 	-webkit-user-select: none;

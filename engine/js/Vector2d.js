@@ -1,7 +1,5 @@
 define(function() {
     
-    var DEG_TO_RAD = Math.PI/180; //ca. 0.017453292519943;
-    var RAD_TO_DEG = 180/Math.PI; //ca. 57.2957795;
     
     
     // constructor
@@ -10,9 +8,13 @@ define(function() {
         this.y = y;
     }
     
+    Vector2d.DEG_TO_RAD = Math.PI/180; //ca. 0.017453292519943;
+    Vector2d.RAD_TO_DEG = 180/Math.PI; //ca. 57.2957795;
+    
+    
     Vector2d.prototype.rotate = function(angle) {
-        var newX = (this.x * Math.cos(angle * DEG_TO_RAD) - this.y * Math.sin(angle * DEG_TO_RAD));
-        var newY = (this.x * Math.sin(angle * DEG_TO_RAD) + this.y * Math.cos(angle * DEG_TO_RAD));
+        var newX = (this.x * Math.cos(angle * Vector2d.DEG_TO_RAD) - this.y * Math.sin(angle * Vector2d.DEG_TO_RAD));
+        var newY = (this.x * Math.sin(angle * Vector2d.DEG_TO_RAD) + this.y * Math.cos(angle * Vector2d.DEG_TO_RAD));
         this.x = newX;
         this.y = newY;
     }

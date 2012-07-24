@@ -22,6 +22,8 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         document.getElementsByTagName('head')[0].appendChild(this.animationNode);
     	
     	this.scenes = {};
+    	
+    	this.ctx = null;
 	
 	}
 	
@@ -68,6 +70,41 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 				
 				this.stage.addEventListener("mousemove", function(event) {
 				});
+			} else {
+				// Canvas mode
+				
+				this.ctx = this.canvasNode.getContext('2d');
+				this.canvasNode.width = this.canvasNode.offsetWidth;
+				this.canvasNode.height = this.canvasNode.offsetHeight;
+				
+				
+				
+				// Initialize update function for updating the animations
+				if (this.updateLoopId != null) {
+					this.clearInterval(updateLoopId);
+				}
+				var updateFunc = function(that) {
+					return function() {
+						that.updateLoop();
+					}
+				}
+				updateFunc = updateFunc.call(this, this);
+				updateLoopId = setInterval(updateFunc, 1000 / this.fps);
+				
+				
+				
+				
+				if (this.renderLoopId != null) {
+					this.clearInterval(renderLoopId);
+				}
+				var renderFunc = function(that) {
+					return function() {
+						that.renderLoop();
+					}
+				}
+				renderFunc = renderFunc.call(this, this);
+				renderLoopId = setInterval(renderFunc, 1000 / this.fps);
+				
 			}
 			
 			if (this.gameLoopId != undefined) {
@@ -114,8 +151,34 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 		//this.stage = this.createElement(properties);
 		
         this.lastKeyframe = this.findLastKeyframe();
+        if (this.animationMode == AnimEn.ANIMATION_MODE_DOM) {
+        	this.initCSSAnimation(false);
+        } else {
+        	this.initCanvasAnimation(false);
+        }
         
-        this.initAnimation(false);
+	}
+	/**
+	 * Renders the canvas on the screen 
+	 */
+	AnimEn.prototype.renderLoop = function() {
+		
+		
+		this.ctx.clearRect(0,0,this.canvasNode.scrollWidth,this.canvasNode.scrollHeight);
+		
+		this.stage.drawRecursive(this.ctx);
+		
+		// for (var index in DisplayObject.elementList) {
+			// var displObj = DisplayObject.elementList[index];
+			// displObj.draw(ctx);
+			// //ctx.drawImage(img,0,0);
+		// }
+	}
+	
+	AnimEn.prototype.updateLoop = function() {
+		for (var index in this.animObjs) {
+			this.animObjs[index].updateAnimations();
+		}
 	}
 	
 	/**
@@ -169,11 +232,24 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         return this.scenes;
 	}
 	
+	
+	AnimEn.prototype.initCanvasAnimation = function(playAnim) {
+		var lastKeyframe = this.findLastKeyframe() - 1;
+		for(var key in this.animObjs) {
+        	var animParamObjs = this.animObjs[key].getAnimations()["tween"];
+            for(var keyObj in animParamObjs) {
+                var displayObj = this.animObjs[key].findById(parseInt(keyObj));
+            }
+		}
+	}
+	
+	
+	
 	/**
 	 * Initializes the animation of the current scene
 	 * @param playAnim True when the Animation should be played afer initialisation
 	 */
-	AnimEn.prototype.initAnimation = function(playAnim) {
+	AnimEn.prototype.initCSSAnimation = function(playAnim) {
 	    var lastKeyframe = this.findLastKeyframe() - 1;
 	    // Set the current vendor Prefix
 	    var prefix = "-" + this.getVendorPrefix().toLowerCase() + "-";
@@ -183,34 +259,33 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	    this.loadActiveScene();
 	    var animation = [];
 	    for(var key in this.animObjs) {
-            for (var sceneKey in this.animObjs[key].getAnimations()) {
-            	var scene = this.animObjs[key].getAnimations()["tween"];
-	            for(var keyObj in scene) {
-	                var displayObj = this.animObjs[key].findById(parseInt(keyObj));
-	                var obj = scene[keyObj];
-	                var animName = "Animation" + keyObj;
-	                var keyframes = '@' + prefix + "keyframes " + animName + ' { ';
-	                
-	                for(var keyKeyframe in obj) {
-	                    var kfPercent = Math.floor((parseInt(keyKeyframe) - 1) / lastKeyframe * 100);
-	                    keyframes += this.createKeyframe(animName, obj[keyKeyframe], kfPercent, prefix, displayObj);
-		            }
-		            
-		            keyframes += '} \n';
-		            animation.push(keyframes);
-	                this.animObjs[key].addAnimation(displayObj, animName, animTime, sceneKey);
-	                console.log(keyframes);
+        	var animParamObjs = this.animObjs[key].getAnimations()["tween"];
+            for(var keyObj in animParamObjs) {
+                var displayObj = this.animObjs[key].findById(parseInt(keyObj));
+                var animParams = animParamObjs[keyObj];
+                var animName = "Animation" + keyObj;
+                var keyframes = '@' + prefix + "keyframes " + animName + ' { ';
+                
+                for(var keyKeyframe in animParams) {
+                    var kfPercent = Math.floor((parseInt(keyKeyframe) - 1) / lastKeyframe * 100);
+                    keyframes += this.createKeyframe(animName, animParams[keyKeyframe], kfPercent, prefix, displayObj);
 	            }
-	        }
+	            
+	            keyframes += '} \n';
+	            animation.push(keyframes);
+                this.animObjs[key].addAnimation(displayObj, animName, animTime);
+                console.log(keyframes);
+            }
 			if (playAnim) {
 				this.animObjs[key].play(this.activeScene);
 			}
             //this.animObjs[key].stop();
 	    }
+	    // Delete old anim rules
 	    for (var i=this.animationNode.sheet.cssRules.length - 1; i >= 0 ; i--) {
 	    	this.animationNode.sheet.deleteRule(i);
 	    }
-	    
+	    // Add animation rules
 	    for (var i=0; i < animation.length; i++) {
 	    	this.animationNode.sheet.insertRule(animation[i], 0);
 	    }
@@ -341,7 +416,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	
 	
 	AnimEn.prototype.getAnimationMode = function() {
-		return "dom"; // Currently only dom
+		return this.animationMode; // Currently only dom
 	}
 	
 	AnimEn.prototype.setSelectedObject = function(obj) {

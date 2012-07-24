@@ -161,7 +161,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		 */
 		onPlayAnimation:function() {
 			this.setAnimObject(null);
-			AnimEn.getInst().initAnimation(false);
+			AnimEn.getInst().initCSSAnimation(false);
 			AnimEn.getInst().play();
 		},
 		/**

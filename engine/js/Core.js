@@ -43,7 +43,7 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
 		// Fix for the old animationformat. If in the properties there is an object at first this is the old animation format
 		if (properties != null) {
 			for (var key in properties) {
-				if (key == "x" && (typeof properties[key] == Number)) {
+				if (key == "x" && (typeof properties[key] == "number")) {
 					properties = null;
 					break;
 				}
@@ -160,8 +160,8 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
                                 "resourceKey": "leaf4"
                               },
                               "leaf5": {
-                                "x": 5.086243722412251,
-                                "y": 15.580102824645568,
+                                "x": 2,
+                                "y": 18,
                                 "rotation": 8.648984190591333,
                                 "width": 102,
                                 "height": 69,
@@ -268,8 +268,8 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
                                 },
                                 "14": {
                                   "1": {
-                                    "x": 5.086243722412251,
-                                    "y": 15.580102824645568,
+                                    "x": 2,
+                                    "y": 18,
                                     "rotation": 8.648984190591333,
                                     "refX": 0.12228349909725346,
                                     "refY": 0.23228668032226962,
@@ -288,7 +288,9 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
                                     "y": 18,
                                     "rotation": 8.648984190591333,
                                     "refX": 0.12228349909725346,
-                                    "refY": 0.23228668032226962
+                                    "refY": 0.23228668032226962,
+                                    "width": 102,
+                                    "height": 69
                                   },
                                   "15": {
                                     "x": 2,
@@ -304,7 +306,9 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
                                     "y": 23,
                                     "rotation": 18.859932706334927,
                                     "refX": 0.1571496784880594,
-                                    "refY": 0.16794477720827672
+                                    "refY": 0.16794477720827672,
+                                    "width": 80,
+                                    "height": 71
                                   },
                                   "60": {
                                     "x": 2,

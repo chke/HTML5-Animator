@@ -5,6 +5,7 @@ define(['engine/Vector2d'], function(Vector2d) {
         this.children = [];
         this.x = 0;
         this.y = 0;
+        this.visible = true;
 
         this.type = 'DisplayObject';
 
@@ -59,36 +60,37 @@ define(['engine/Vector2d'], function(Vector2d) {
      * Updates the dom representation of this object with the current settings
      */
     DisplayObject.prototype.updateDom = function() {
-        if (this.z !== undefined) {
-            this.domNode.style.zIndex = this.z;
-        }
-        this.domNode.style.MozTransform = "";
-        // Set Transform to empty
-        this.domNode.style.webkitTransform = "";
-        this.domNode.style.transform = "";
-        if (this.rotation !== undefined && this.rotation !== 0) {
-            this.domNode.style.MozTransform += "rotate(" + this.rotation + "deg)";
-            this.domNode.style.webkitTransform += "rotate(" + this.rotation + "deg)";
-            this.domNode.style.transform += "rotate(" + this.rotation + "deg)";
-        }
-        if ((this.scaleX !== undefined || this.scaleY !== undefined) && (this.scaleX !== 0 || this.scaleY !== 0)) {
-            this.domNode.style.MozTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-            this.domNode.style.webkitTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-            this.domNode.style.transform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-        }
-        if (this.refX !== undefined && this.refY !== undefined) {
-            this.domNode.style.transformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
-            this.domNode.style.MozTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
-            this.domNode.style.webkitTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
-        }
-        if (this.width !== undefined && this.height !== undefined) {
-            this.domNode.style.width = "" + this.width + "px";
-            this.domNode.style.height = "" + this.height + "px";
-        }
-        this.domNode.style.left = (this.x - this.getRefPosX() + ((this.getParent() != null) ? this.getParent().getRefPosX() : 0)) + "px";
-        this.domNode.style.top = (this.y - this.getRefPosY() + ((this.getParent() != null) ? this.getParent().getRefPosY() : 0)) + "px";
-        this.domNode.setAttribute("id", "do" + this.id);
-
+    	if (this.domNode != null) {
+	        if (this.z !== undefined) {
+	            this.domNode.style.zIndex = this.z;
+	        }
+	        this.domNode.style.MozTransform = "";
+	        // Set Transform to empty
+	        this.domNode.style.webkitTransform = "";
+	        this.domNode.style.transform = "";
+	        if (this.rotation !== undefined && this.rotation !== 0) {
+	            this.domNode.style.MozTransform += "rotate(" + this.rotation + "deg)";
+	            this.domNode.style.webkitTransform += "rotate(" + this.rotation + "deg)";
+	            this.domNode.style.transform += "rotate(" + this.rotation + "deg)";
+	        }
+	        if ((this.scaleX !== undefined || this.scaleY !== undefined) && (this.scaleX !== 0 || this.scaleY !== 0)) {
+	            this.domNode.style.MozTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
+	            this.domNode.style.webkitTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
+	            this.domNode.style.transform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
+	        }
+	        if (this.refX !== undefined && this.refY !== undefined) {
+	            this.domNode.style.transformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
+	            this.domNode.style.MozTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
+	            this.domNode.style.webkitTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
+	        }
+	        if (this.width !== undefined && this.height !== undefined) {
+	            this.domNode.style.width = "" + this.width + "px";
+	            this.domNode.style.height = "" + this.height + "px";
+	        }
+	        this.domNode.style.left = (this.x - this.getRefPosX() + ((this.getParent() != null) ? this.getParent().getRefPosX() : 0)) + "px";
+	        this.domNode.style.top = (this.y - this.getRefPosY() + ((this.getParent() != null) ? this.getParent().getRefPosY() : 0)) + "px";
+	        this.domNode.setAttribute("id", "do" + this.id);
+		}
     }
 
     DisplayObject.prototype.setId = function(id) {
@@ -127,7 +129,7 @@ define(['engine/Vector2d'], function(Vector2d) {
      * Returns the Dom representation of this element and creates it if not existent
      */
     DisplayObject.prototype.getDomNode = function() {
-        if (this.domNode === undefined) {
+        if (this.domNode == null) {
             this.createDomNode();
         }
         return this.domNode;
@@ -155,10 +157,12 @@ define(['engine/Vector2d'], function(Vector2d) {
      */
     DisplayObject.prototype.addChild = function(child) {
         if (require('engine/AnimEn').getAnimationMode() == require('engine/AnimEn').ANIMATION_MODE_DOM) {
-            if (this.domNode === undefined) {
+            if (this.domNode == null) {
                 this.createDomNode();
             }
-            this.domNode.appendChild(child.getDomNode());
+            if (this.domNode != null) {
+            	this.domNode.appendChild(child.getDomNode());
+            }
         }
         this.children[child.name] = child;
         child.setParent(this);
@@ -452,7 +456,7 @@ define(['engine/Vector2d'], function(Vector2d) {
     }
 
     DisplayObject.prototype.getHeight = function() {
-        return (this.height != undefined ? this.width : 0);
+        return (this.height != undefined ? this.height : 0);
     }
 
     DisplayObject.prototype.getScaledWidth = function() {
@@ -573,6 +577,7 @@ define(['engine/Vector2d'], function(Vector2d) {
      * @param {Boolean} value True or False
      */
     DisplayObject.prototype.setVisible = function(value) {
+    	this.visible = value;
         if (this.domNode != null) {
             if (value == true) {
                 this.domNode.style.display = "";
@@ -580,6 +585,25 @@ define(['engine/Vector2d'], function(Vector2d) {
                 this.domNode.style.display = "none";
             }
         }
+    }
+    
+    DisplayObject.prototype.draw = function(ctx) {
+    	// This is an invisible container that doesn't need to draw anything
+    }
+    
+    DisplayObject.prototype.drawRecursive = function(ctx) {
+    	ctx.save()
+    	this.doTransforms(ctx);
+    	for (var index in this.children) {
+    		this.children[index].drawRecursive(ctx);
+    	}
+    	ctx.restore();
+    }
+    
+    DisplayObject.prototype.doTransforms = function(ctx) {
+    	ctx.translate(this.x, this.y);
+    	ctx.rotate(Vector2d.DEG_TO_RAD * this.getRotation());
+    	ctx.scale(this.getScaleX(), this.getScaleY());
     }
     
     // return constructor

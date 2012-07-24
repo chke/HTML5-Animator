@@ -133,10 +133,14 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
      */
     Sprite.prototype.setResourceKey = function(key) {
         this.resourceKey = key;
+        var orgWidth = this.width;
+        var orgHeight = this.height;
         var onLoad = (function(scope) {
             return (function() {
-                    scope.width = this.width;
-                    scope.height = this.height;
+                    scope.width = orgWidth;
+                    scope.height = orgHeight;
+                    this.width = orgWidth;
+                    this.height = orgHeight;
                     scope.updateDom();
                     scope.updateChildren();
                     
@@ -146,6 +150,8 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
         this.setVisible(false);
         var newImage = ResourceManager.getResource(key, onLoad);
         if (newImage !== undefined) {
+        	this.width = orgWidth;
+        	this.height = orgHeight;
             if (this.domNode !== undefined && this.domNode.contains(this.image)) {
                 // If there is already an image in this sprite remove it before adding this
                 this.domNode.removeChild(this.image);
@@ -164,7 +170,29 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
         }
         
     }
- 
+    /**
+     * Draws this sprite to the stage 
+	 * @param {Object} ctx
+     */
+    Sprite.prototype.draw = function(ctx) {
+    	this.doTransforms(ctx);
+    	ctx.drawImage(this.image,-this.width * this.refX,-this.height * this.refY, this.width, this.height);
+    	this.undoTransforms(ctx);
+    }
+    Sprite.prototype.drawRecursive = function(ctx) {
+    	ctx.save()
+    	this.doTransforms(ctx);
+    	if (this.visible) {
+    		if (this.id == 1) {
+    			//console.log("Rot: " + this.rotation);
+    		}
+    		ctx.drawImage(this.image,-this.getWidth() * this.getScaleX() * this.getRefX(),-this.getHeight() * this.getScaleY() * this.getRefY(), this.getWidth() * this.getScaleX(), this.getHeight() * this.getScaleY());
+    	}
+    	for (var index in this.children) {
+    		this.children[index].drawRecursive(ctx);
+    	}
+    	ctx.restore();
+    }
  
     // return constructor
     return Sprite;

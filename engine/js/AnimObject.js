@@ -15,6 +15,12 @@ define(['engine/DisplayObject'], function(DisplayObject) {
             this.animations = settings.animations;
         }
         this.animationList = [];
+        this.currentFrame = 0;
+        
+        this.objectsToAnimate = {};
+        this.previousKeyframes = {};
+        this.nextKeyframes = {};
+        this.diffBetweenKeyframes = {};
     }
     
     
@@ -80,6 +86,9 @@ define(['engine/DisplayObject'], function(DisplayObject) {
     }
     
     AnimObject.prototype.play = function(duration) {
+    	this.isPlaying = true;
+    	this.duration = duration;
+    	
     	if (duration == null) {
     		duration = "";
     	}
@@ -96,7 +105,13 @@ define(['engine/DisplayObject'], function(DisplayObject) {
 	        displObj.domNode.style.WebkitAnimation = animName + " " + animTime + "s linear " + duration;
 	        displObj.domNode.style.Animation = animName + " " + animTime + "s linear " + duration;
     	}
-    	
+		if (displObj == null) {
+    		this.objectsToAnimate = {};
+    		this.currentFrame = 0;
+    		for (var key in this.animations.tween) {
+    			this.objectsToAnimate[key] = DisplayObject.getElementById(key);
+    		}
+    	}
     }
     
     AnimObject.prototype.stop = function() {
@@ -109,6 +124,70 @@ define(['engine/DisplayObject'], function(DisplayObject) {
     	
     }
  
+ 	AnimObject.prototype.findNextKeyframe = function(animParams, start, lastKf) {
+ 		for (var i = start; i <= lastKf; i++) {
+ 			if (animParams[i] != null) {
+ 				return i;
+ 			}
+ 		}
+ 	}
+ 	
+ 	AnimObject.prototype.calculateInbetween = function(animParams, key, currentFrame) {
+ 		var params = {};
+ 		var diff = this.nextKeyframes[key] - this.previousKeyframes[key];
+ 		for (var paramKey in animParams) {
+ 			var param = animParams[paramKey] + (this.diffBetweenKeyframes[key][paramKey] * (currentFrame - this.previousKeyframes[key]) / diff);
+ 			
+ 			if (param != null && param+""!="NaN") {
+ 				params[paramKey] = param;
+ 			}
+ 		}
+ 		
+ 		return params;
+ 	}
+ 
+	AnimObject.prototype.updateAnimations = function() {
+		var lastKf = require('engine/AnimEn').getInst().findLastKeyframe();
+    	if (this.isPlaying) {
+    		this.currentFrame++;
+    		if (this.currentFrame + 1 == lastKf) {
+    			this.currentFrame = 1;
+    		}
+    		for (var key in this.objectsToAnimate) {
+    			var obj = this.objectsToAnimate[key];
+    			var animParams = this.animations.tween[key];
+    			
+    			if (this.previousKeyframes[key] == null || this.currentFrame == 1 || this.nextKeyframes[key] == this.currentFrame ) {
+    				// When keyframe found
+    				if (this.currentFrame == 1 || this.previousKeyframes[key] == null) {
+    					this.nextKeyframes[key] = this.findNextKeyframe(animParams, this.currentFrame, lastKf);
+    				}
+	    			var keyFramePos = this.findNextKeyframe(animParams, this.currentFrame + 1, lastKf);
+	    			this.previousKeyframes[key] = this.nextKeyframes[key];
+	    			this.nextKeyframes[key] = keyFramePos;
+    				obj.setAnimParams(animParams[this.previousKeyframes[key]]);
+    				this.diffBetweenKeyframes[key] = {};
+    				for (var paramKey in animParams[this.previousKeyframes[key]]) {
+    					var param = animParams[this.nextKeyframes[key]][paramKey] - animParams[this.previousKeyframes[key]][paramKey];
+    					if (param != null && param+""!="NaN") {
+    						this.diffBetweenKeyframes[key][paramKey] = param;
+    					}
+    					
+    				}
+    				if (key == 15) {
+						console.log(this.diffBetweenKeyframes[key]);
+					}
+    			} else if (this.currentFrame < this.nextKeyframes[key]) {
+    				var newParams = this.calculateInbetween(animParams[this.previousKeyframes[key]], key, this.currentFrame);
+    				if (newParams != null) {
+    					obj.setAnimParams(newParams);
+    				}
+    			}
+    		}
+    	}
+    	//this.duration
+	}
+		
     // return constructor
     return AnimObject;
 });
