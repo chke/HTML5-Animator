@@ -40,7 +40,7 @@ define(function() {
          * acos( -------- ) = angle
          *       |a| * |b|
          */
-        return RAD_TO_DEG * Math.acos((this.x * x2 + this.y * y2) / (Math.sqrt(this.x * this.x + this.y * this.y) * Math.sqrt(x2 * x2 + y2 * y2)));
+        return Vector2d.RAD_TO_DEG * Math.acos((this.x * x2 + this.y * y2) / (Math.sqrt(this.x * this.x + this.y * this.y) * Math.sqrt(x2 * x2 + y2 * y2)));
     }
     
     /**

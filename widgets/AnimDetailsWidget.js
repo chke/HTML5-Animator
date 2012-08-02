@@ -31,6 +31,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 this.setValue(obj.getRefX(), this.refX, "0.5");
                 this.setValue(obj.getRefY(), this.refY, "0.5");
                 this.setValue(obj.getZIndex(), this.zIndex);
+                this.setValue(obj.getOpacity(), this.opacity);
                 this.setValue(obj.getScaleX(), this.scaleX, "1");
                 this.setValue(obj.getScaleY(), this.scaleY, "1");
                 if (obj.getType() === "Sprite") {
@@ -113,6 +114,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 change.refY = this.value;
             } else if (this.id == event.data.zIndex.id) {
                 change.zIndex = this.value;
+            } else if (this.id == event.data.opacity.id) {
+                change.opacity = this.value;
             } else if (this.id == event.data.scaleX.id) {
                 change.scaleX = this.value;
             } else if (this.id == event.data.scaleY.id) {
@@ -132,6 +135,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             this.refX = dojo.byId("refX");
             this.refY = dojo.byId("refY");
             this.zIndex = dojo.byId("zIndex");
+            this.opacity = dojo.byId("opacity");
             this.scaleX = dojo.byId("scaleX");
             this.scaleY = dojo.byId("scaleY");
             this.resourceKey = dojo.byId("resourceKey");
@@ -146,6 +150,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             $("#refX").bind("change", this, this.changeValue);
             $("#refY").bind("change", this, this.changeValue);
             $("#zIndex").bind("change", this, this.changeValue);
+            $("#opacity").bind("change", this, this.changeValue);
             $("#scaleX").bind("change", this, this.changeValue);
             $("#scaleY").bind("change", this, this.changeValue);
             $("#resourceKey").bind("change", this, this.changeValue);

@@ -57,7 +57,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
                     "MenuItems": {
                         "Start": {
                             "onClick": function() {
-                                dojo.publish("/menuwidget/playAnimation", []);
+                                dojo.publish("/html5animator/playAnimation", []);
                             }
                         },
                         "Start in new window": {

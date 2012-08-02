@@ -1,4 +1,4 @@
-define(['engine/DisplayObject'], function(DisplayObject) {
+define(['engine/DisplayObject', 'engine/util/CubicBezier'], function(DisplayObject, CubicBezier) {
  
     // constructor
     function AnimObject(settings) {
@@ -21,6 +21,7 @@ define(['engine/DisplayObject'], function(DisplayObject) {
         this.previousKeyframes = {};
         this.nextKeyframes = {};
         this.diffBetweenKeyframes = {};
+        this.timingFunctions = {};
     }
     
     
@@ -135,9 +136,14 @@ define(['engine/DisplayObject'], function(DisplayObject) {
  	AnimObject.prototype.calculateInbetween = function(animParams, key, currentFrame) {
  		var params = {};
  		var diff = this.nextKeyframes[key] - this.previousKeyframes[key];
+ 		var isTimincFunc = this.timingFunctions[key];
  		for (var paramKey in animParams) {
- 			var param = animParams[paramKey] + (this.diffBetweenKeyframes[key][paramKey] * (currentFrame - this.previousKeyframes[key]) / diff);
- 			
+ 			var param;
+ 			if (isTimincFunc) {
+ 				param = animParams[paramKey] + (this.diffBetweenKeyframes[key][paramKey] * this.timingFunctions[key].getY((currentFrame - this.previousKeyframes[key]) / diff));
+ 			} else {
+ 				param = animParams[paramKey] + (this.diffBetweenKeyframes[key][paramKey] * (currentFrame - this.previousKeyframes[key]) / diff);
+ 			}
  			if (param != null && param+""!="NaN") {
  				params[paramKey] = param;
  			}
@@ -174,9 +180,9 @@ define(['engine/DisplayObject'], function(DisplayObject) {
     					}
     					
     				}
-    				if (key == 15) {
-						console.log(this.diffBetweenKeyframes[key]);
-					}
+    				if (animParams[this.previousKeyframes[key]]["timingFunc"] != null) {
+    					this.timingFunctions[key] = CubicBezier.readTimingFunc(animParams[this.previousKeyframes[key]]["timingFunc"]);
+    				}
     			} else if (this.currentFrame < this.nextKeyframes[key]) {
     				var newParams = this.calculateInbetween(animParams[this.previousKeyframes[key]], key, this.currentFrame);
     				if (newParams != null) {

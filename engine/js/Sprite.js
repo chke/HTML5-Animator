@@ -59,9 +59,7 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
 		DisplayObject.prototype.createDomNode.call(this); // Super Call
 		if (this.image !== undefined) {
             this.setVisible(false);
-            if (this.width != null && this.image != null) {
-                this.image.width = this.width;
-            }
+            
             if (this.height != null && this.image != null) {
                 this.setHeight(this.height);
             }
@@ -96,23 +94,23 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
 	
 	
 	Sprite.prototype.getWidth = function() {
-	    return (this.image !== undefined && this.image.width !== undefined && this.image.width !== 0) ? this.image.width : this.width;
+	    return this.width;
 	}
 	
     Sprite.prototype.getHeight = function() {
-        return (this.image !== undefined && this.image.height !== undefined && this.image.height !== 0) ? this.image.height : this.height;
+        return this.height;
     }
     
     Sprite.prototype.setHeight = function(height) {
         DisplayObject.prototype.setHeight.call(this, height);
         if (this.image !== undefined && this.image.height !== undefined) {
-            this.image.height = height;
+            //this.image.height = height;
         }
     }
     Sprite.prototype.setWidth = function(width) {
         DisplayObject.prototype.setWidth.call(this, width);
         if (this.image !== undefined && this.image.width !== undefined) {
-            this.image.width = width;
+            //this.image.width = width;
         }
     }
 	
@@ -139,8 +137,8 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
             return (function() {
                     scope.width = orgWidth;
                     scope.height = orgHeight;
-                    this.width = orgWidth;
-                    this.height = orgHeight;
+                    //this.width = orgWidth;
+                    //this.height = orgHeight;
                     scope.updateDom();
                     scope.updateChildren();
                     
@@ -186,7 +184,9 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
     		if (this.id == 1) {
     			//console.log("Rot: " + this.rotation);
     		}
-    		ctx.drawImage(this.image,-this.getWidth() * this.getScaleX() * this.getRefX(),-this.getHeight() * this.getScaleY() * this.getRefY(), this.getWidth() * this.getScaleX(), this.getHeight() * this.getScaleY());
+    		ctx.globalAlpha = this.opacity;
+    		ctx.drawImage(this.image,-this.getWidth() * this.getRefX(),-this.getHeight() * this.getRefY(), this.getWidth(), this.getHeight());
+    		ctx.globalAlpha = 1;
     	}
     	for (var index in this.children) {
     		this.children[index].drawRecursive(ctx);

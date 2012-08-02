@@ -46,12 +46,14 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             dojo.subscribe("/keyframewidget/updateinbetweens", this, "updateInbetweens");
             dojo.subscribe("/scenewidget/activatescene", this, "onActivateScene");
             dojo.subscribe("/scenewidget/deletescene", this, "onDeleteScene");
+            dojo.subscribe("/html5animator/playAnimation", this, "onPlayAnimation");
+            dojo.subscribe("/html5animator/stopAnimation", this, "onStopAnimation");
             
             if (!this.stageInitialized) {
                 dojo.publish("/animtimelinewidget/requestInitStage", []);
             }
-            dojo.connect(dojo.byId("playAnimation"), "click", this, this.onPlayAnimation);
-            dojo.connect(dojo.byId("stopAnimation"), "click", this, this.onStopAnimation);
+            dojo.connect(dojo.byId("playAnimation"), "click", this, this.onClickPlayAnimation);
+            dojo.connect(dojo.byId("stopAnimation"), "click", this, this.onClickStopAnimation);
             
         },
         
@@ -123,16 +125,26 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         /**
          * Handles the click on the play button 
          */
+        onClickPlayAnimation: function() {
+        	dojo.publish("/html5animator/playAnimation", []);
+        },
+        /**
+         * Handles the play of an animation 
+         */
         onPlayAnimation: function() {
         	this.playTimeline();
-        	dojo.publish("/animtimelinewidget/playAnimation", []);
         },
         /**
          * Handles the click on the stop button 
          */
         onStopAnimation: function() {
         	this.stopTimeline();
-        	dojo.publish("/animtimelinewidget/stopAnimation", []);
+        },
+        /**
+         * Handles the click on the stop button 
+         */
+        onClickStopAnimation: function() {
+        	dojo.publish("/html5animator/stopAnimation", []);
         },
         /**
          * Shows the moving scrubber on the timeline 
@@ -274,6 +286,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 	                    this.setValue(displObj.getRefX(), keyframe, "refX");
 	                    this.setValue(displObj.getRefY(), keyframe, "refY");
 	                    this.setValue(displObj.getZIndex(), keyframe, "zIndex");
+	                    this.setValue(displObj.getOpacity(), keyframe, "opacity");
 	                    this.setValue(displObj.getWidth(), keyframe, "width");
 	                    this.setValue(displObj.getHeight(), keyframe, "height");
 	                    //this.setValue(displObj.getScaleX(), keyframe, "scaleX");
@@ -338,7 +351,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         updateAnimation: function (keyframePos) {
             for (var key in this.stageObjects) {
                 var obj = this.stageObjects[key]; // Iterate over all stage elemets
-                if (obj["tween"]) {
+                if (obj["tween"] != null && obj["tween"] != {}) {
                     if (obj["tween"][keyframePos]) {
                         dojo.publish("/animtimelinewidget/updateObject", [obj["tween"][keyframePos], obj.displObj]);
                     } else {

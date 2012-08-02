@@ -139,9 +139,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
             dojo.subscribe("/menuwidget/addObject", this, "onAddObject");
             dojo.subscribe("/menuwidget/newProject", this, "onNewProject");
             dojo.subscribe("/scenewidget/activatescene", this, "onActivateScene");
-            dojo.subscribe("/menuwidget/playAnimation", this, "onPlayAnimation");
-            dojo.subscribe("/animtimelinewidget/playAnimation", this, "onPlayAnimation");
-            dojo.subscribe("/animtimelinewidget/stopAnimation", this, "onStopAnimation");
+            dojo.subscribe("/html5animator/playAnimation", this, "onPlayAnimation");
+            dojo.subscribe("/html5animator/playAnimation", this, "onPlayAnimation");
+            dojo.subscribe("/html5animator/stopAnimation", this, "onStopAnimation");
             
 		},
 		startup : function() {
@@ -408,6 +408,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
                 }
                 if (change.zIndex !== undefined) {
                     object.setZIndex(change.zIndex);
+                }
+                if (change.opacity !== undefined) {
+                    object.setOpacity(change.opacity);
                 }
                 if (change.scaleX !== undefined) {
                     object.setScaleX(change.scaleX);

@@ -53,9 +53,9 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 			this.stage = new AnimObject({"animations": { }});
 			this.animObjs.push(this.stage);
 			
-			
 			if (this.getAnimationMode() === "dom") {
 				this.stage.setDomNode(this.domNode);
+				
 				this.stage.addEventListener("click", function(event) {
 					
 					var elem = document.elementFromPoint(event.clientX, event.clientY);
@@ -77,42 +77,19 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 				this.canvasNode.width = this.canvasNode.offsetWidth;
 				this.canvasNode.height = this.canvasNode.offsetHeight;
 				
-				
-				
-				// Initialize update function for updating the animations
-				if (this.updateLoopId != null) {
-					this.clearInterval(updateLoopId);
+				if (this.animationLoopId != null) {
+					this.clearInterval(this.animationLoopId);
 				}
-				var updateFunc = function(that) {
+				var animFunc = function(that) {
 					return function() {
-						that.updateLoop();
+						that.animationLoop();
 					}
 				}
-				updateFunc = updateFunc.call(this, this);
-				updateLoopId = setInterval(updateFunc, 1000 / this.fps);
-				
-				
-				
-				
-				if (this.renderLoopId != null) {
-					this.clearInterval(renderLoopId);
-				}
-				var renderFunc = function(that) {
-					return function() {
-						that.renderLoop();
-					}
-				}
-				renderFunc = renderFunc.call(this, this);
-				renderLoopId = setInterval(renderFunc, 1000 / this.fps);
+				animFunc = animFunc.call(this, this);
+				this.animationLoopId = setInterval(animFunc, 1000 / this.fps);
 				
 			}
 			
-			if (this.gameLoopId != undefined) {
-				this.clearInterval(gameLoopId);
-			}
-			
-			
-			gameLoopId = setTimeout(this.animationLoop, 1000 / this.fps);
 		}
 	}
 	
@@ -158,6 +135,21 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         }
         
 	}
+	
+	
+	/**
+	 * Renders the canvas on the screen 
+	 */
+	AnimEn.prototype.animationLoop = function() {
+		if (this.fpsCounter) {
+			this.fpsCounter.tick();
+		}
+		this.updateLoop();
+		this.renderLoop();
+		
+	}
+	
+	
 	/**
 	 * Renders the canvas on the screen 
 	 */
@@ -272,6 +264,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	            }
 	            
 	            keyframes += '} \n';
+	            
 	            animation.push(keyframes);
                 this.animObjs[key].addAnimation(displayObj, animName, animTime);
                 console.log(keyframes);
@@ -362,6 +355,15 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         if (animation.y !== undefined) {
             animString += "top:" + (animation.y - displayObj.getRefPosY() + ((displayObj.getParent() != null) ? displayObj.getParent().getRefPosY() : 0)) + "px; ";
         }
+        if (animation.width !== undefined) {
+            animString += "width: " + animation.width + "px; ";
+        }
+        if (animation.height !== undefined) {
+            animString += "height: " + animation.height + "px; ";
+        }
+        if (animation.opacity !== undefined) {
+            animString += "opacity: " + animation.opacity + "; ";
+        }
         if (animation.timingFunc !== undefined) {
         	animString += prefix + "animation-timing-function: " + animation.timingFunc + " ";
         }
@@ -403,10 +405,6 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
         return maxKf;
 	}
 	
-	AnimEn.prototype.animationLoop = function() {
-		
-	}
-	
 	
 	/**
 	 * Update objects
@@ -414,9 +412,11 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	AnimEn.prototype.update = function() {
 	}
 	
-	
+	/**
+	 * Returns the active animation mode 
+	 */
 	AnimEn.prototype.getAnimationMode = function() {
-		return this.animationMode; // Currently only dom
+		return this.animationMode; // dom or canvas
 	}
 	
 	AnimEn.prototype.setSelectedObject = function(obj) {

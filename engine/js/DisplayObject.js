@@ -6,6 +6,7 @@ define(['engine/Vector2d'], function(Vector2d) {
         this.x = 0;
         this.y = 0;
         this.visible = true;
+        this.opacity = 1;
 
         this.type = 'DisplayObject';
 
@@ -32,20 +33,23 @@ define(['engine/Vector2d'], function(Vector2d) {
             this.refX = (settings.refX == null) ? 0.5 : settings.refX;
             this.refY = (settings.refY == null) ? 0.5 : settings.refY;
 
-            if (settings.rotation !== undefined) {
+            if (settings.rotation != null) {
                 this.rotation = settings.rotation;
             }
-            if (settings.scaleX !== undefined) {
+            if (settings.scaleX != null) {
                 this.scaleX = settings.scaleX;
             }
-            if (settings.scaleY !== undefined) {
+            if (settings.scaleY != null) {
                 this.scaleY = settings.scaleY;
             }
-            if (settings.width !== undefined) {
+            if (settings.width != null) {
                 this.width = settings.width;
             }
-            if (settings.height !== undefined) {
+            if (settings.height != null) {
                 this.height = settings.height;
+            }
+            if (settings.opacity != null) {
+                this.opacity = settings.opacity;
             }
         }
     }
@@ -86,6 +90,9 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        if (this.width !== undefined && this.height !== undefined) {
 	            this.domNode.style.width = "" + this.width + "px";
 	            this.domNode.style.height = "" + this.height + "px";
+	        }
+	        if (this.opacity != 1 || this.domNode.style.opacity != 1) {
+	        	this.domNode.style.opacity = this.opacity;
 	        }
 	        this.domNode.style.left = (this.x - this.getRefPosX() + ((this.getParent() != null) ? this.getParent().getRefPosX() : 0)) + "px";
 	        this.domNode.style.top = (this.y - this.getRefPosY() + ((this.getParent() != null) ? this.getParent().getRefPosY() : 0)) + "px";
@@ -305,6 +312,7 @@ define(['engine/Vector2d'], function(Vector2d) {
         if (this.height !== undefined) {
             obj["height"] = this.getHeight();
         }
+        obj["opacity"] = this.getOpacity();
         return obj;
     }
     
@@ -320,6 +328,9 @@ define(['engine/Vector2d'], function(Vector2d) {
         }
         if (obj.height !== undefined) {
             this.setHeight(obj["height"]);
+        }
+        if (obj.opacity !== undefined) {
+            this.setOpacity(obj["opacity"]);
         }
         
         this.x = obj["x"];
@@ -592,7 +603,7 @@ define(['engine/Vector2d'], function(Vector2d) {
     }
     
     DisplayObject.prototype.drawRecursive = function(ctx) {
-    	ctx.save()
+    	ctx.save();
     	this.doTransforms(ctx);
     	for (var index in this.children) {
     		this.children[index].drawRecursive(ctx);
@@ -602,8 +613,18 @@ define(['engine/Vector2d'], function(Vector2d) {
     
     DisplayObject.prototype.doTransforms = function(ctx) {
     	ctx.translate(this.x, this.y);
-    	ctx.rotate(Vector2d.DEG_TO_RAD * this.getRotation());
     	ctx.scale(this.getScaleX(), this.getScaleY());
+    	ctx.rotate(Vector2d.DEG_TO_RAD * this.getRotation());
+    }
+    
+    
+    DisplayObject.prototype.getOpacity = function() {
+    	return this.opacity;
+    }
+    
+    DisplayObject.prototype.setOpacity = function(newOpacity) {
+    	this.opacity = newOpacity;
+        this.updateDom();
     }
     
     // return constructor

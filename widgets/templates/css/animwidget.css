@@ -15,6 +15,7 @@
 
 #objectModifierInner {
 	position: absolute;
+	cursor: move;
 	top: 8px;
 	bottom: 8px;
 	left: 8px;
