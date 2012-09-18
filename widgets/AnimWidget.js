@@ -1,4 +1,4 @@
-require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/script", "dojo/dom-construct", "dojo/text!./widgets/templates/animwidget.html", "engine/Core", "engine/AnimEn", "engine/DisplayObject", "engine/Vector2d", "engine/Sprite", "engine/AnimObject", "lib/jquery.js"], function(declare, _Widget, _Templated, script, domConstruct, template, Core, AnimEn, DisplayObject, Vector2d, Sprite, AnimObject) {
+require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/script", "dojo/dom-construct", "dojo/text!./widgets/templates/animwidget.html", "engine/Core", "engine/AnimEn", "engine/DisplayObject", "engine/Vector2d", "engine/Sprite", "engine/AnimObject", "lib/jquery.js"], function(declare, _Widget, _Templated, script, domConstruct, template, Core, AnimEn, DisplayObject, Vector2d, Sprite, AnimObject, jQuery) {
 
 	return declare("widgets.AnimWidget", [_Widget, _Templated], {
 		templateString : template,
@@ -40,23 +40,27 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 
 				this.stage.addEventListener("click", function(event) {
 					//that.onClickAnimElem(event);
-				});
+				}, false);
 
 				this.stage.addEventListener("mousedown", function(event) {
 					that.onMouseDownAnimElem(event);
-				});
+				}, false);
 
 				window.addEventListener("mousemove", function(event) {
 					that.onMouseMoveAnimElem(event);
-				});
+				}, false);
 
 				window.addEventListener("mouseup", function(event) {
 					that.onMouseUpAnimElem(event);
-				});
+				}, false);
 
 				this.stage.addEventListener("mouseleave", function(event) {
 					//that.onMouseLeaveStage(event);
-				});
+				}, false);
+				
+				window.addEventListener("keyup", function(event) {
+					that.onKeyUp(event);
+				}, false);
 
 				this.objectModifier = $("#objectModifier");
 				this.objectModifier.hide();
@@ -249,10 +253,22 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		        
 		        
 		        var scale = selectedObj.getParentScale();
-		        var omWidth = selectedObj.getWidth() * pos.scaleX +  2 * this.omOffset;
+		        var omWidth = selectedObj.getWidth() * pos.scaleX + 2 * this.omOffset;
 		        var omHeight = selectedObj.getHeight() * pos.scaleY +  2 * this.omOffset;
-    		    this.objectModifier.css("left", pos.x - selectedObj.getWidth() * selectedObj.getRefX() * scale.scaleX * selectedObj.getScaleX() - this.omOffset);
-                this.objectModifier.css("top", pos.y - selectedObj.getHeight() * selectedObj.getRefY() * scale.scaleY * selectedObj.getScaleY() - this.omOffset);
+		        var omLeft = pos.x - selectedObj.getWidth() * selectedObj.getRefX() * scale.scaleX * selectedObj.getScaleX() - this.omOffset;
+		        
+		        // if the object is scaled, the position and size has to be updated
+		        if (selectedObj.getScaleX() < 0) {
+		        	omWidth = (selectedObj.getWidth() * pos.scaleX - 2 * this.omOffset) * - 1;
+		        	omLeft = omLeft - selectedObj.getWidth();
+		        }
+		        var omTop = pos.y - selectedObj.getHeight() * selectedObj.getRefY() * scale.scaleY * selectedObj.getScaleY() - this.omOffset;
+		        if (selectedObj.getScaleY() < 0) {
+		        	omHeight = (selectedObj.getHeight() * pos.scaleY -  2 * this.omOffset) * - 1;
+		        	omTop = omTop - selectedObj.getHeight();
+		        }
+    		    this.objectModifier.css("left", omLeft);
+                this.objectModifier.css("top", omTop);
                 this.objectModifier.css("width", omWidth);
                 this.objectModifier.css("height", omHeight);
                 
@@ -629,6 +645,12 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		    var elem = document.elementFromPoint(x, y);
 		    var obj = AnimEn.getInst().getObjectFromDom(elem);
 		    return obj;
+		},
+		
+		onKeyUp: function(event) {
+			if (event.keyCode == 75) {
+				dojo.publish("/html5animator/addKeyframe", [this.selectedObject]);
+			}
 		},
 		
 		/**

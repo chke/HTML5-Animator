@@ -3,5 +3,16 @@
 }
 
 #keyframeWidget canvas {
-	border: 1px solid #aaaaaa;
+	border: 1px solid #000000;
+}
+
+#keyframeBezier {
+	position: absolute;
+	left: 32px;
+	top: 39px;
+}
+
+
+#bezier {
+	position: relative;
 }

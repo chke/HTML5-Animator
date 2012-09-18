@@ -174,18 +174,23 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
      */
     Sprite.prototype.draw = function(ctx) {
     	this.doTransforms(ctx);
-    	ctx.drawImage(this.image,-this.width * this.refX,-this.height * this.refY, this.width, this.height);
+    	ctx.save();
+    	ctx.translate(-this.getWidth() * this.getRefX(), -this.getHeight() * this.getRefY());
+    	ctx.drawImage(this.image,0,0, this.width, this.height);
+    	ctx.restore();
     	this.undoTransforms(ctx);
     }
     Sprite.prototype.drawRecursive = function(ctx) {
-    	ctx.save()
+    	ctx.save();
     	this.doTransforms(ctx);
     	if (this.visible) {
-    		if (this.id == 1) {
-    			//console.log("Rot: " + this.rotation);
-    		}
     		ctx.globalAlpha = this.opacity;
-    		ctx.drawImage(this.image,-this.getWidth() * this.getRefX(),-this.getHeight() * this.getRefY(), this.getWidth(), this.getHeight());
+    		ctx.save();
+    		if (this.getWidth() > 0 && this.getHeight() > 0 && this.image != null) {
+	    		ctx.translate(-this.getWidth() * this.getRefX(), -this.getHeight() * this.getRefY());
+	    		ctx.drawImage(this.image,0,0, this.getWidth(), this.getHeight());
+	    	}
+    		ctx.restore();
     		ctx.globalAlpha = 1;
     	}
     	for (var index in this.children) {

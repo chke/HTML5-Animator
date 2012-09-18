@@ -32,7 +32,7 @@ define(["engine/util/Storage"], function(Storage) {
         if (resources[key] !== undefined) {
             var img = new Image();
             if (onLoaded !== undefined) {
-                img.addEventListener("load", onLoaded);
+                img.addEventListener("load", onLoaded, false);
             }
             img.src = resources[key].src;
             return img;

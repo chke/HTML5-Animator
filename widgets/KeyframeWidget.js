@@ -154,7 +154,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 				width : this.keyframeCanvasSize,
 				height : this.keyframeCanvasSize,
 				id : "keyframeBezier"
-			}, dojo.byId(this.changeKeyframe));
+			}, dojo.byId("bezier"));
 
 			this.ctx = this.keyframeBezier.getContext("2d");
 
@@ -400,11 +400,11 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		 * @param {Object} e
 		 */
 		onMouseDown : function(e) {
-			if (this.hasSelected(this.points.p1, (e.offsetX != null) ? e.offsetX : (e.layerX - e.target.offsetLeft), (e.offsetY != null) ? e.offsetY : (e.layerY - e.target.offsetTop))) {
+			if (this.hasSelected(this.points.p1, (e.offsetX != null) ? e.offsetX : e.layerX, (e.offsetY != null) ? e.offsetY : e.layerY)) {
 				this.selectedBezier = true;
 				this.dragPoint = "p1";
 				this.updateTimingType("custom");
-			} else if (this.hasSelected(this.points.p2, (e.offsetX != null) ? e.offsetX : (e.layerX - e.target.offsetLeft), (e.offsetY != null) ? e.offsetY : (e.layerY - e.target.offsetTop))) {
+			} else if (this.hasSelected(this.points.p2, (e.offsetX != null) ? e.offsetX : e.layerX, (e.offsetY != null) ? e.offsetY : e.layerY)) {
 				this.selectedBezier = true;
 				this.dragPoint = "p2";
 				this.updateTimingType("custom");
@@ -420,8 +420,8 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		 */
 		onMouseMove : function(e) {
 			if (this.dragPoint != null) {
-				this.points[this.dragPoint].x = (e.offsetX != null) ? e.offsetX : (e.layerX - e.target.offsetLeft);
-				this.points[this.dragPoint].y = (e.offsetY != null) ? e.offsetY : (e.layerY - e.target.offsetTop);
+				this.points[this.dragPoint].x = (e.offsetX != null) ? e.offsetX : e.layerX;
+				this.points[this.dragPoint].y = (e.offsetY != null) ? e.offsetY : e.layerY;
 				this.pointsPercent[this.dragPoint].x = this.points[this.dragPoint].x / this.keyframeCanvasSize;
 				this.pointsPercent[this.dragPoint].y = 1 - this.points[this.dragPoint].y / this.keyframeCanvasSize;
 				this.drawBezier();

@@ -1,4 +1,4 @@
-require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "engine/util/CubicBezier", "engine/util/Storage", "engine/AnimEn", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject, CubicBezier, Storage, AnimEn) {
+require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/_Templated", "dojo/io/script", "dojo/dom", "dojo/text!./widgets/templates/animtimelinewidget.html", "engine/AnimObject", "engine/util/CubicBezier", "engine/util/Storage", "engine/AnimEn", "dojo/dom-class", "lib/jquery.js"], function(declare, _Widget, _TemplatedMixin, _Templated, script, domConstruct, template, AnimObject, CubicBezier, Storage, AnimEn, domClass) {
 
     return declare("widgets.AnimTimelineWidget", [_Widget, _TemplatedMixin], {
         MOUSE_BUTTON_RIGHT: 2,
@@ -28,6 +28,24 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         stage: undefined,
         defaultScene:"defaultAnim",
         linearBezier:new CubicBezier(0, 0, 1, 1),
+        contextMenuItemsKeyframe : {
+            "addKf" : {
+                name : "Add Keyframe"
+            },
+            "copyKf" : {
+                name : "Copy Keyframe"
+            },
+            "pasteKf" : {
+                name : "Paste Keyframe"
+            },
+            "deleteKf" : {
+                name : "Delete Keyframe"
+            }
+        },
+        contextMenuItemsTimeline : {
+        },
+        
+        
         /** Called after creation of the widget and initializes the necessary files for this widget */
         postCreate : function() {
             dojo.create("link", {
@@ -48,6 +66,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             dojo.subscribe("/scenewidget/deletescene", this, "onDeleteScene");
             dojo.subscribe("/html5animator/playAnimation", this, "onPlayAnimation");
             dojo.subscribe("/html5animator/stopAnimation", this, "onStopAnimation");
+            dojo.subscribe("/html5animator/addKeyframe", this, "onAddKeyframe");
             
             if (!this.stageInitialized) {
                 dojo.publish("/animtimelinewidget/requestInitStage", []);
@@ -121,6 +140,85 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 }
                 tlHeader.append("<span>" + val + "</span>");
             }
+            
+            
+            // Create Context menu
+            this.contextMenu = new dijit.Menu();
+            for (var menuId in this.contextMenuItemsKeyframe) {
+                var name = this.contextMenuItemsKeyframe[menuId].name;
+                var menuItem = new dijit.MenuItem({
+                    id : menuId,
+                    label : name,
+                    disabled : false
+                });
+                this.contextMenuItemsKeyframe[menuId].item = menuItem;
+                dojo.connect(menuItem, "onClick", this, this.selectCtxMenuItem);
+                this.contextMenu.addChild(menuItem);
+            }
+            
+            this.contextMenu.bindDomNode("timelineView");
+            dojo.connect(this.contextMenu, "_openMyself", this, this.onTimelineContextMenu);
+            
+        },
+        
+        onAddKeyframe: function(displObj) {
+        	var keyframeId = this.scrubberPosX / this.gridSize + 1;
+        	if (this.stageObjects[displObj.getId()]["tween"] == null) {
+        		this.stageObjects[displObj.getId()]["tween"] = {};
+        	}
+        	if (displObj != null && (this.stageObjects[displObj.getId()]["tween"][keyframeId] == null 
+        			|| this.stageObjects[displObj.getId()]["tween"][keyframeId] == {})) {
+	            this.stageObjects[displObj.getId()]["tween"][keyframeId] = {};
+	            this.addKeyframe(displObj, keyframeId, this.stageObjects[displObj.getId()]["tween"], this.activeScene, false);
+           }
+        },
+        selectCtxMenuItem: function(e) {
+        	var menuItem = dijit.getEnclosingWidget(e.target);
+            if (menuItem.id == "pasteKf") {
+            	var pos = this.fitToGrid(this.keyframeX + this.gridSize / 2);
+                var keyframeId = pos / this.gridSize - 1;
+                this.stageObjects[this.selectedDisplObj.getId()]["tween"][keyframeId] = this.copiedKeyframe;
+                this.addKeyframe(this.selectedDisplObj, keyframeId, this.stageObjects[this.selectedDisplObj.getId()]["tween"], this.activeScene, false);
+                
+            } else if (menuItem.id == "addKf") {
+            	var pos = this.fitToGrid(this.keyframeX + this.gridSize / 2);
+                var keyframeId = pos / this.gridSize - 1;
+                if (this.stageObjects[this.selectedDisplObj.getId()]["tween"][keyframeId] == null) {
+	                this.stageObjects[this.selectedDisplObj.getId()]["tween"][keyframeId] = {};
+	                this.addKeyframe(this.selectedDisplObj, keyframeId, this.stageObjects[this.selectedDisplObj.getId()]["tween"], this.activeScene, false);
+                }
+            } else if (menuItem.id == "copyKf") {
+            	var obj = this.findStageObjectByKeyframe(this.selectedKeyframe);
+            	var kfPos = this.fitToGrid(this.keyframePos);
+            	var kfId = kfPos / this.gridSize + 1;
+            	var keyframes = obj["tween"];
+            	this.copiedKeyframe = keyframes[kfId];
+            } else if (menuItem.id == "deleteKf") {
+            	this.removeKeyframe();
+            }
+        },
+        onTimelineContextMenu: function(e) {
+        	if (domClass.contains(e.target, "keyframe")) {
+        		// on a keyframe
+        		this.contextMenuItemsKeyframe["addKf"].item.attr('disabled', true);
+        		this.contextMenuItemsKeyframe["pasteKf"].item.attr('disabled', true);
+        		this.contextMenuItemsKeyframe["copyKf"].item.attr('disabled', false);
+        		this.contextMenuItemsKeyframe["deleteKf"].item.attr('disabled', false);
+        	} else {
+        		// without keyframe
+        		var kfPos = this.fitToGrid(e.coords.x - dojo.byId("timelineScrollContainer").offsetLeft);
+        		var kfId = kfPos / this.gridSize - 1;
+        		this.keyframeX = kfPos;
+        		this.contextMenuItemsKeyframe["addKf"].item.attr('disabled', false);
+        		this.contextMenuItemsKeyframe["copyKf"].item.attr('disabled', true);
+        		this.contextMenuItemsKeyframe["deleteKf"].item.attr('disabled', true);
+        		if (this.copiedKeyframe != null) {
+        			this.contextMenuItemsKeyframe["pasteKf"].item.attr('disabled', false);
+        		} else {
+        			this.contextMenuItemsKeyframe["pasteKf"].item.attr('disabled', true);
+        		}
+        	}
+        	
         },
         /**
          * Handles the click on the play button 
@@ -441,6 +539,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 	                            }
 	                        }
 	                    }
+	                    delete this.stageObjects[stageObjectId]["tween"][keyframeId];
 	                } else {
 	                    if (startPos > 0) {
 	                        var dif = animParams[keyframeId][key] - animParams[startPos][key];
@@ -499,13 +598,17 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 	animObj.animations = {};
                 }
 				if (animObj.animations["tween"] == null) {
-					animObj.animations["tween"] = {}
+					animObj.animations["tween"] = {};
 				}
-				if (animObj.animations["tween"][stageObjectId] === undefined) {
+				if (animObj.animations["tween"][stageObjectId] == null) {
 					animObj.animations["tween"][stageObjectId] = {};
 					this.stageObjects[stageObjectId]["tween"] = animObj.animations["tween"][stageObjectId];
 				}
-                this.stageObjects[stageObjectId]["tween"][keyframeId] = {}; // stageObjects["armL"]["idle"]
+				if (animParams == null) {
+					this.stageObjects[stageObjectId]["tween"][keyframeId] = {}; // stageObjects["armL"]["idle"]
+				} else {
+					this.stageObjects[stageObjectId]["tween"][keyframeId] = animParams[keyframeId];
+				}
             }
             var keyframeNode = $('<div class="keyframe" style="left: ' + ((keyframeId - 1) * this.gridSize) + 'px;"></div>');
             keyframeNode.on("mousedown", this, function (e) {
@@ -528,7 +631,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
         findStageObjectByKeyframe: function (keyframe) {
 	        var obj = null;
         	if (keyframe != null) {
-	        	var kfParent = keyframe.parentElement;
+	        	var kfParent = keyframe.parentNode;
 	        	// Iterate through the stage Objects
 	            for (var key in this.stageObjects) {
 	                obj = this.stageObjects[key];
@@ -569,18 +672,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
          */
         moveKeyframe: function() {
             if (this.selectedKeyframe != null && this.selectedKeyframe.parentElement != null) {
-                var kfParent = this.selectedKeyframe.parentElement;
-                var obj;
-                // Find displayObject by keyframe
-                for (var key in this.stageObjects) {
-                    obj = this.stageObjects[key];
-                    if (obj["timelineNode"] != null && obj["timelineNode"][0] == kfParent) {
-                        break;
-                    }
-                    
-                }
+                var obj = this.findStageObjectByKeyframe(this.selectedKeyframe);
                 
-                if (obj["timelineNode"] != null && obj["timelineNode"][0] == kfParent) {
+                if (obj != null) {
                     if (obj["tween"] != null) {
                         var keyframes = obj["tween"];
                         var kfPos = this.fitToGrid(this.keyframePos); // The id of the keyframe ist the original position
@@ -627,7 +721,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
 	                    that.addKeyframe(event.data.displObj, keyframeId, that.stageObjects[event.data.displObj.getId()]["tween"], that.activeScene, false);
                 	}
                 });
-                
+                keyframeNode.mousedown({that: this, displObj: displObj}, function(event) {
+                	event.data.that.selectedDisplObj = event.data.displObj;
+                });
                 if (parentNode === undefined) {
                     parentNode = this.objectInfoView;
                 }
@@ -647,7 +743,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 e.preventDefault(); // Prevent image Dragging
             }
             if(e.stopPropagation) {
-                e.stopPropagation(); // Prevent Bubbeling down the Event
+                //e.stopPropagation(); // Prevent Bubbeling down the Event
             }
             this.keyframeSelected = true;
             this.keyframePos = e.target.offsetLeft;
@@ -690,7 +786,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             if (this.keyframeSelected && !this.movedKeyframe) {
                 if (e.button == this.MOUSE_BUTTON_RIGHT) {
                 	// Remove Keyframe on right click
-                	this.removeKeyframe(e);
+                	//this.removeKeyframe(e);
                 } else {
                 	// Select Keyframe
                 	var obj = this.findStageObjectByKeyframe(this.selectedKeyframe);
@@ -702,15 +798,15 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 		dojo.addClass(this.selectedKeyframe, "selected");
                 		dojo.publish("/animtimelinewidget/selectKeyframe", [obj.displObj, (this.keyframeX / this.gridSize + 1), obj["tween"]]);
                 	}
-                	
+                	e.preventDefault();
                 }
             } else if (this.movedKeyframe) {
                 this.moveKeyframe(e);
+                e.preventDefault();
             }
             this.scrubberSelected = false;
             this.movedKeyframe = false;
             this.keyframeSelected = false;
-            e.preventDefault();
         },
         /** Firs the current x value to the grid of the Keyframes*/
         fitToGrid : function(x) {

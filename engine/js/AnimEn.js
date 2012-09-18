@@ -247,7 +247,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	    var prefix = "-" + this.getVendorPrefix().toLowerCase() + "-";
 	    //var keyframeprefix = "-webkit-keyframes";//-webkit-keyframes
 	    var animTime = lastKeyframe / this.fps;
-	    
+	    var sheet;
 	    this.loadActiveScene();
 	    var animation = [];
 	    for(var key in this.animObjs) {
@@ -274,13 +274,19 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 			}
             //this.animObjs[key].stop();
 	    }
+	    
+	    if (this.animationNode.sheet != null) {
+	    	sheet = this.animationNode.sheet;
+	    } else {
+			sheet = document.styleSheets[document.styleSheets.length - 1]
+		}
 	    // Delete old anim rules
-	    for (var i=this.animationNode.sheet.cssRules.length - 1; i >= 0 ; i--) {
-	    	this.animationNode.sheet.deleteRule(i);
+	    for (var i=sheet.cssRules.length - 1; i >= 0 ; i--) {
+	    	sheet.deleteRule(i);
 	    }
 	    // Add animation rules
 	    for (var i=0; i < animation.length; i++) {
-	    	this.animationNode.sheet.insertRule(animation[i], 0);
+	    	sheet.insertRule(animation[i], 0);
 	    }
 	}
 	
