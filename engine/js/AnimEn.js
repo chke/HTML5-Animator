@@ -252,6 +252,7 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 	    var animation = [];
 	    for(var key in this.animObjs) {
         	var animParamObjs = this.animObjs[key].getAnimations()["tween"];
+        	this.animObjs[key].animationList = null;
             for(var keyObj in animParamObjs) {
                 var displayObj = this.animObjs[key].findById(parseInt(keyObj));
                 var animParams = animParamObjs[keyObj];
@@ -438,7 +439,11 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 			if (fromDom.nodeName === "IMG") {
 				fromDom = fromDom.parentNode;
 			}
-			object = DisplayObject.getElementById(fromDom.getAttribute("id").slice(2));
+			var id = fromDom.getAttribute("id");
+			if (id != null) {
+				id = id.slice(2);
+			}
+			object = DisplayObject.getElementById(id);
 		}
 		return object;
 	}

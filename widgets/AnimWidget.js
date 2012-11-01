@@ -144,7 +144,6 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
             dojo.subscribe("/menuwidget/newProject", this, "onNewProject");
             dojo.subscribe("/scenewidget/activatescene", this, "onActivateScene");
             dojo.subscribe("/html5animator/playAnimation", this, "onPlayAnimation");
-            dojo.subscribe("/html5animator/playAnimation", this, "onPlayAnimation");
             dojo.subscribe("/html5animator/stopAnimation", this, "onStopAnimation");
             
 		},
@@ -229,9 +228,36 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 		onUpdateObjectLayers: function(animObjId, oldParentId, newParentId) {
 		    var obj = this.stage.findById(parseInt(animObjId));
 		    if (obj !== null && obj !== undefined) {
-		        var newParent = this.stage.findById(parseInt(newParentId));
+		    	var newParent;
+		        if (newParentId != -1) {
+		        	newParent = this.stage.findById(parseInt(newParentId));
+		        } else {
+		        	newParent = this.stage;
+		        }
+		        
 		        if (newParent !== undefined) {
 		            newParent.addChild(obj);
+		            obj.updateDom();
+		        }
+		        var currElem = this.stage.findById(parseInt(oldParentId));
+		        while (currElem != null && currElem.type != "AnimObject") {
+		        	currElem = currElem.getParent();
+		        }
+		        var currNewElem;
+		        if (obj.type != "AnimObject") {
+			        currNewElem = this.stage.findById(parseInt(newParentId));
+			        while (currNewElem != null && currNewElem.type != "AnimObject") {
+			        	currNewElem = currNewElem.getParent();
+			        }
+			    } else {
+			    	currNewElem = obj;
+			    }
+			    if (currNewElem == null) {
+			    	currNewElem = this.stage;
+			    }
+		        if (currElem != null && currElem.animations["tween"][animObjId] != null) {
+		        	currNewElem.animations["tween"][animObjId] = currElem.animations["tween"][animObjId];
+		        	delete currElem.animations["tween"][animObjId];
 		        }
 		    }
 		    if (this.selectedObject != undefined) {

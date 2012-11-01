@@ -153,20 +153,42 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dijit/Tree"
 
                 pasteItem : function(/*Item*/childItem, /*Item*/oldParentItem, /*Item*/newParentItem, /*Boolean*/bCopy, /*int?*/insertIndex) {
 
-                    dijit.tree.ForestStoreModel.prototype.pasteItem.apply(this, arguments);
-
+                    
                     var itemId = childItem.id[0].replace("layer", "");
                     var oldParentId = oldParentItem.id[0].replace("layer", "");
                     var newParentId;
                     if (newParentItem.id !== "LayerRoot") {
                         newParentId = newParentItem.id[0].replace("layer", "");
+                    } else {
+                    	newParentId = -1;
                     }
 
                     dojo.publish("/layerwidget/updateLayerPosition", [itemId, oldParentId, newParentId]);
-
-                    if (newParentItem.id === "LayerRoot") {
+					
+                    if (newParentItem.id == "LayerRoot" || oldParentItem.id == "LayerRoot") {
                         // Add the layer to the correct position
+                        var id = childItem.id[0];
+                        var name = childItem.name[0];
+                        this.store.deleteItem(childItem);
+                        
+                        this.store.save();
+                        
+                        var itemData = {
+		                    id : id,
+		                    name : name
+		                };
+		                
+		                parentStore = {
+	                        parent : newParentItem,
+	                        attribute : 'children'
+	                    };
+		                
+                        this.store.newItem(itemData, (newParentItem.id == "LayerRoot") ? null : parentStore);
+                        
+                    } else {
+                    	dijit.tree.ForestStoreModel.prototype.pasteItem.apply(this, arguments);
                     }
+                    
 
                     this.store.save();
                 },

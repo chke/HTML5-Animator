@@ -191,7 +191,6 @@ define(['engine/DisplayObject', 'engine/util/CubicBezier'], function(DisplayObje
     			}
     		}
     	}
-    	//this.duration
 	}
 		
     // return constructor

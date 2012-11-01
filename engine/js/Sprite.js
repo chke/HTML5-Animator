@@ -193,8 +193,8 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
     		ctx.restore();
     		ctx.globalAlpha = 1;
     	}
-    	for (var index in this.children) {
-    		this.children[index].drawRecursive(ctx);
+    	for (var index in this.childList) {
+    		this.childList[index].drawRecursive(ctx);
     	}
     	ctx.restore();
     }

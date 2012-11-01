@@ -3,6 +3,7 @@ define(['engine/Vector2d'], function(Vector2d) {
     // constructor
     function DisplayObject(settings) {
         this.children = [];
+        this.childList = [];
         this.x = 0;
         this.y = 0;
         this.visible = true;
@@ -68,24 +69,43 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        if (this.z !== undefined) {
 	            this.domNode.style.zIndex = this.z;
 	        }
-	        this.domNode.style.MozTransform = "";
 	        // Set Transform to empty
-	        this.domNode.style.webkitTransform = "";
-	        this.domNode.style.transform = "";
+	        if (this.domNode.style.transform != null) {
+	        	this.domNode.style.transform = "";
+	        } else if (this.domNode.style.MozTransform != null) {
+	        	this.domNode.style.MozTransform = "";
+	        } else if (this.domNode.style.webkitTransform != null) {
+	        	this.domNode.style.webkitTransform = "";
+	        }
+	        
 	        if (this.rotation !== undefined && this.rotation !== 0) {
-	            this.domNode.style.MozTransform += "rotate(" + this.rotation + "deg)";
-	            this.domNode.style.webkitTransform += "rotate(" + this.rotation + "deg)";
-	            this.domNode.style.transform += "rotate(" + this.rotation + "deg)";
+	        	if (this.domNode.style.transform != null) {
+	        		this.domNode.style.transform += "rotate(" + this.rotation + "deg)";
+	        	} else if (this.domNode.style.MozTransform != null) {
+	        		this.domNode.style.MozTransform += "rotate(" + this.rotation + "deg)";
+	        	} else if(this.domNode.style.webkitTransform != null) {
+	        		this.domNode.style.webkitTransform += "rotate(" + this.rotation + "deg)";
+	        	}
 	        }
 	        if ((this.scaleX !== undefined || this.scaleY !== undefined) && (this.scaleX !== 0 || this.scaleY !== 0)) {
-	            this.domNode.style.MozTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-	            this.domNode.style.webkitTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-	            this.domNode.style.transform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
+	        	if (this.domNode.style.transform != null) {
+		            this.domNode.style.transform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
+	        	} else if (this.domNode.style.transform != null) {
+		        	this.domNode.style.MozTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
+	        	} else if (this.domNode.style.transform != null) {
+		            this.domNode.style.webkitTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
+	        	}
 	        }
 	        if (this.refX !== undefined && this.refY !== undefined) {
-	            this.domNode.style.transformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
-	            this.domNode.style.MozTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
-	            this.domNode.style.webkitTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
+	        	if (this.domNode.style.transformOrigin != null) {
+	        		this.domNode.style.transformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
+	        	}
+	            if (this.domNode.style.transformOrigin != null) {
+	            	this.domNode.style.MozTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
+	            }
+	            if (this.domNode.style.transformOrigin != null) {
+	            	this.domNode.style.webkitTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
+	            }
 	        }
 	        if (this.width !== undefined && this.height !== undefined) {
 	            this.domNode.style.width = "" + this.width + "px";
@@ -173,6 +193,8 @@ define(['engine/Vector2d'], function(Vector2d) {
         }
         this.children[child.name] = child;
         child.setParent(this);
+        this.childList.push(child);
+        this.childList.sort(this.sortChildren);
     }
     /**
      * Returns the rotation of all parent elements
@@ -552,6 +574,9 @@ define(['engine/Vector2d'], function(Vector2d) {
     DisplayObject.prototype.setZIndex = function(z) {
         this.z = z;
         this.updateDom();
+        if (this.parent != null) {
+        	this.parent.childList.sort(this.sortChildren);
+        }
     }
 
     DisplayObject.prototype.getZIndex = function() {
@@ -567,7 +592,12 @@ define(['engine/Vector2d'], function(Vector2d) {
     DisplayObject.prototype.removeChild = function(obj) {
         if (this.children[obj.getName()] !== undefined) {
             delete this.children[obj.getName()];
-            this.domNode.removeChild(obj.domNode);
+            for (var key in this.domNode.children) {
+            	if (this.domNode.children[key] == obj.domNode) {
+            		this.domNode.removeChild(obj.domNode);
+            	}
+            }
+            
         }
     }
     /**
@@ -605,8 +635,8 @@ define(['engine/Vector2d'], function(Vector2d) {
     DisplayObject.prototype.drawRecursive = function(ctx) {
     	ctx.save();
     	this.doTransforms(ctx);
-    	for (var index in this.children) {
-    		this.children[index].drawRecursive(ctx);
+    	for (var index in this.childList) {
+    		this.childList[index].drawRecursive(ctx);
     	}
     	ctx.restore();
     }
@@ -626,6 +656,23 @@ define(['engine/Vector2d'], function(Vector2d) {
     	this.opacity = newOpacity;
         this.updateDom();
     }
+    
+    /**
+     * Sort two children of the childList
+	 * @param {Object} a
+	 * @param {Object} b
+	 * @return -1: a lover b; 0: equal; 1: b lower a
+     */
+    DisplayObject.prototype.sortChildren = function(a, b) {
+    	if (a.getZIndex() < b.getZIndex()) {
+    		return -1;
+    	} else if (a.getZIndex() > b.getZIndex()) {
+    		return 1;
+    	} else {
+    		return 0;
+    	}
+    }
+    	
     
     // return constructor
     return DisplayObject;
