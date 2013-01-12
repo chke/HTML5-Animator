@@ -1,4 +1,4 @@
-define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObject, ResourceManager) {
+define(['engine/DisplayObject', "engine/ResourceManager", "engine/EventListener"], function(DisplayObject, ResourceManager, EventListener) {
  
     // constructor
     function Sprite(settings) {
@@ -7,30 +7,47 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
 		//this.setProperties(properties, name);
 	 
         this._super = DisplayObject.prototype;
-        
-        this.resourceKey = settings.resourceKey;
-        
-        if (settings.width != null) {
-            this.width = settings.width;
+        if (settings != null) {
+	        this.resourceKey = settings.resourceKey;
+	        
+	        if (settings.width != null) {
+	            this.width = settings.width;
+	        }
+	        if (settings.height != null) {
+	            this.height = settings.height;
+	        }
+	        
+	        if (settings.resourceKey != null) {
+	        	this.setResourceKey(settings.resourceKey);
+        	} else {
+        		this.image = settings.image;
+        		this.onResourceLoaded(this).call(this.image);
+        	}
+	        
+	        // call super constructor
+	        DisplayObject.call(this, settings);
+	 
+	        // additional public variables
+	        this.type = 'Sprite';
         }
-        if (settings.height != null) {
-            this.height = settings.height;
-        }
-        
-        this.setResourceKey(settings.resourceKey);
-        
-        // call super constructor
-        DisplayObject.call(this, settings);
- 
-        // additional public variables
-        this.type = 'Sprite';
-        
     }
     
     // setup the inheritance
  	Sprite.prototype = new DisplayObject();
 	Sprite.prototype.constructor = Sprite;
     
+	
+	Sprite.prototype.addEventListener = function(eventStr, func) {
+		if (this.image != null && this.domNode != null) {
+	    	if (this.image.addEventListener) {
+	            this.image.addEventListener(eventStr, func, false);
+	        } else if (this.image.attachEvent) {
+	            this.image.attachEvent('on' + eventStr, func);
+	        }
+        } else {
+        	var event = new EventListener(this, eventStr, func);
+        }
+	}
 	        
 	Sprite.prototype.setProperties = function(nProps, name) {
 		if (nProps !== undefined) {
@@ -42,12 +59,19 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
 			
 		}
 	}
-	
+
 	/**
 	 * Returns the image of this sprite 
 	 */
 	Sprite.prototype.getImage = function() {
 		return this.image;
+	}
+	
+	/**
+	 * Sets image of this sprite to the given one
+	 */
+	Sprite.prototype.setImage = function(image) {
+		this.image = image;
 	}
 	
 	
@@ -125,6 +149,26 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
     Sprite.prototype.getResourceKey = function() {
         return this.resourceKey;
     }
+    
+    
+    /**
+     * This method should be called when the Resource is loaded
+     * @param scope The scope is the current scope the mehtod is called wiht (should bei this/actual scope)
+     * @returns {Function}
+     */
+    Sprite.prototype.onResourceLoaded = function(scope) {
+        return (function() {
+                scope.width = (scope.width != null) ? scope.width : this.width;
+                scope.height = (scope.height != null) ? scope.height : this.height;
+                //this.width = orgWidth;
+                //this.height = orgHeight;
+                scope.updateDom();
+                scope.updateChildren();
+                
+                scope.setVisible(true);
+           });
+    };
+    
     /**
      * Sets the resource key to load the image 
      * @param {String} key Resource Key
@@ -133,18 +177,7 @@ define(['engine/DisplayObject', "engine/ResourceManager"], function(DisplayObjec
         this.resourceKey = key;
         var orgWidth = this.width;
         var orgHeight = this.height;
-        var onLoad = (function(scope) {
-            return (function() {
-                    scope.width = orgWidth;
-                    scope.height = orgHeight;
-                    //this.width = orgWidth;
-                    //this.height = orgHeight;
-                    scope.updateDom();
-                    scope.updateChildren();
-                    
-                    scope.setVisible(true);
-               });
-        }).call(this, this);
+        var onLoad = this.onResourceLoaded.call(this, this);
         this.setVisible(false);
         var newImage = ResourceManager.getResource(key, onLoad);
         if (newImage !== undefined) {

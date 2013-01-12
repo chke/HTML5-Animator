@@ -5,16 +5,33 @@ define(["engine/util/Storage"], function(Storage) {
     }
 
     var resources = {};
+    var numOfResources = 0;
+    var loadedResources = 0;
+    var allResourcesLoadedFunc;
 
     ResourceManager.addResource = function(key, value) {
         var img = new Image();
         if (value.indexOf("http") === 0) {
             img.src = value;
         } else {
-            img.src = "engine/img/" + value;
+            img.src = value;
         }
+        img.addEventListener("load", ResourceManager.onResourceLoaded, false);
         resources[key] = img;
-    }
+        numOfResources++;
+    };
+    
+    ResourceManager.onResourceLoaded = function() {
+    	loadedResources++;
+    	if (loadedResources == numOfResources && allResourcesLoadedFunc != null) {
+    		allResourcesLoadedFunc.call();
+    	}
+    };
+    
+    ResourceManager.setOnResourceLoadedFunc = function(func) {
+    	allResourcesLoadedFunc = func;
+    	
+    };
 
     ResourceManager.addLocalResource = function(key, value) {
         ResourceManager.addResource(key, value);
@@ -24,7 +41,7 @@ define(["engine/util/Storage"], function(Storage) {
         }
         localResources[key] = value;
         Storage.set("resources", localResources);
-    }
+    };
     /**
      * Returns the resource by the given key
      */
@@ -40,7 +57,7 @@ define(["engine/util/Storage"], function(Storage) {
             return undefined;
         }
 
-    }
+    };
     /**
      * Returns the resource key by the given src name
      */
@@ -52,13 +69,13 @@ define(["engine/util/Storage"], function(Storage) {
         }
 
         return undefined;
-    }
+    };
     /**
      * Removes the resource with the given key
      */
     ResourceManager.removeResource = function(key) {
         delete resources[key];
-    }
+    };
 
     ResourceManager.removeLocalResource = function(key) {
         ResourceManager.removeResource(key);
@@ -67,11 +84,11 @@ define(["engine/util/Storage"], function(Storage) {
         	delete localResources[key];
         	Storage.set("resources", localResources);
         }
-    }
+    };
 
     ResourceManager.getResourceDict = function() {
         return resources;
-    }
+    };
 
     ResourceManager.initLocalResources = function() {
         if ('localStorage' in window && window['localStorage'] !== null && localStorage.getItem("resources") !== null) {
@@ -80,7 +97,7 @@ define(["engine/util/Storage"], function(Storage) {
                 ResourceManager.addResource(key, localResources[key]);
             }
         }
-    }
+    };
 
     ResourceManager.getKeyList = function() {
         var resourceKeys = [];
@@ -88,7 +105,7 @@ define(["engine/util/Storage"], function(Storage) {
             resourceKeys.push(key);
         }
         return resourceKeys;
-    }
+    };
     
     /**
      * Returns the URL of the given resourceKey 
@@ -99,7 +116,15 @@ define(["engine/util/Storage"], function(Storage) {
     		return resources[key].src;
     	}
     	return null;
-    }
+    };
+    
+    ResourceManager.loadAllResources = function(onLoaded) {
+    	for (var key in resources) {
+    		if (resources[key] == null) {
+    			
+    		}
+    	}
+    };
 
     return ResourceManager;
 }); 

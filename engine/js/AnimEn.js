@@ -1,4 +1,4 @@
-define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/ResourceManager", "engine/util/Storage"], function (AnimObject, DisplayObject, Sprite, ResourceManager, Storage) {
+define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/ResourceManager", "engine/util/Storage", "engine/EventListener"], function (AnimObject, DisplayObject, Sprite, ResourceManager, Storage, EventListener) {
 
     function AnimEn() {
 	
@@ -76,6 +76,13 @@ define(["engine/AnimObject", "engine/DisplayObject", "engine/Sprite", "engine/Re
 				this.ctx = this.canvasNode.getContext('2d');
 				this.canvasNode.width = this.canvasNode.offsetWidth;
 				this.canvasNode.height = this.canvasNode.offsetHeight;
+				this.stage.setHeight(this.canvasNode.height);
+				this.stage.setWidth(this.canvasNode.width);
+				
+				this.canvasNode.addEventListener("click", function(event) {
+					EventListener.handleClick(event.clientX, event.clientY);
+				});
+				
 				
 				if (this.animationLoopId != null) {
 					this.clearInterval(this.animationLoopId);

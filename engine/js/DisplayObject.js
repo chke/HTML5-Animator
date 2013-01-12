@@ -29,6 +29,12 @@ define(['engine/Vector2d'], function(Vector2d) {
                     DisplayObject.elementListLength = settings.id + 1;
                 }
                 DisplayObject.elementList[settings.id] = (this);
+            } else {
+            	if (this.id === undefined) {
+                    this.setId(DisplayObject.elementListLength);
+                    DisplayObject.elementListLength++;
+                    DisplayObject.elementList[this.id] = (this);
+                }
             }
 
             this.refX = (settings.refX == null) ? 0.5 : settings.refX;
@@ -81,7 +87,7 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        if (this.rotation !== undefined && this.rotation !== 0) {
 	        	if (this.domNode.style.transform != null) {
 	        		this.domNode.style.transform += "rotate(" + this.rotation + "deg)";
-	        	} else if (this.domNode.style.MozTransform != null) {
+	        	} else if (this.domNode.style.transform == null) {
 	        		this.domNode.style.MozTransform += "rotate(" + this.rotation + "deg)";
 	        	} else if(this.domNode.style.webkitTransform != null) {
 	        		this.domNode.style.webkitTransform += "rotate(" + this.rotation + "deg)";
@@ -90,9 +96,9 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        if ((this.scaleX !== undefined || this.scaleY !== undefined) && (this.scaleX !== 0 || this.scaleY !== 0)) {
 	        	if (this.domNode.style.transform != null) {
 		            this.domNode.style.transform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-	        	} else if (this.domNode.style.transform != null) {
+	        	} else if (this.domNode.style.transform == null) {
 		        	this.domNode.style.MozTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-	        	} else if (this.domNode.style.transform != null) {
+	        	} else if (this.domNode.style.webkitTransform != null) {
 		            this.domNode.style.webkitTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
 	        	}
 	        }
@@ -100,10 +106,10 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        	if (this.domNode.style.transformOrigin != null) {
 	        		this.domNode.style.transformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
 	        	}
-	            if (this.domNode.style.transformOrigin != null) {
+	            if (this.domNode.style.transformOrigin == null) {
 	            	this.domNode.style.MozTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
 	            }
-	            if (this.domNode.style.transformOrigin != null) {
+	            if (this.domNode.style.webkitTransformOrigin != null) {
 	            	this.domNode.style.webkitTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
 	            }
 	        }
@@ -119,6 +125,17 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        this.domNode.setAttribute("id", "do" + this.id);
 		}
     }
+    
+    DisplayObject.prototype.clone = function(deepCopy) {
+    	var diObj = new DisplayObject({tilesX:this.tilesX, tilesY:this.tilesX, tileIndex:this.tileIndex, image:this.image, x:this.x, y:this.y,refX:this.refX,refY:this.refY});
+    	if (deepCopy) {
+    		for (var key in this.children) {
+    			diObj.addChild(this.children[key].clone(deepCopy));
+    		}
+    	}
+    	
+    	return diObj;
+    };
 
     DisplayObject.prototype.setId = function(id) {
         this.id = id;
@@ -134,10 +151,15 @@ define(['engine/Vector2d'], function(Vector2d) {
      * Adds an event to this object
      */
     DisplayObject.prototype.addEventListener = function(eventStr, func) {
-        if (this.domNode.addEventListener) {
-            this.domNode.addEventListener(eventStr, func, false);
-        } else if (this.domNode.attachEvent) {
-            this.domNode.attachEvent('on' + eventStr, func);
+        if (this.domNode != null) {
+        	if (this.domNode.addEventListener) {
+	            this.domNode.addEventListener(eventStr, func, false);
+	        } else if (this.domNode.attachEvent) {
+	            this.domNode.attachEvent('on' + eventStr, func);
+	        }
+        }
+        for (var key in this.children) {
+        	this.children[key].addEventListener(eventStr, func);
         }
     }
     /**
@@ -145,11 +167,6 @@ define(['engine/Vector2d'], function(Vector2d) {
      */
     DisplayObject.prototype.createDomNode = function() {
         this.domNode = document.createElement("div");
-        if (this.id === undefined) {
-            this.setId(DisplayObject.elementListLength);
-            DisplayObject.elementListLength++;
-            DisplayObject.elementList[this.id] = (this);
-        }
         this.updateDom();
     }
     /**
@@ -158,6 +175,11 @@ define(['engine/Vector2d'], function(Vector2d) {
     DisplayObject.prototype.getDomNode = function() {
         if (this.domNode == null) {
             this.createDomNode();
+            if (this.id === undefined) {
+                this.setId(DisplayObject.elementListLength);
+                DisplayObject.elementListLength++;
+                DisplayObject.elementList[this.id] = (this);
+            }
         }
         return this.domNode;
     }
@@ -191,10 +213,16 @@ define(['engine/Vector2d'], function(Vector2d) {
             	this.domNode.appendChild(child.getDomNode());
             }
         }
+
+        if (this.id === undefined) {
+            this.setId(DisplayObject.elementListLength);
+            DisplayObject.elementListLength++;
+            DisplayObject.elementList[this.id] = (this);
+        }
         this.children[child.name] = child;
         child.setParent(this);
         this.childList.push(child);
-        this.childList.sort(this.sortChildren);
+        //this.childList.sort(this.sortChildren);
     }
     /**
      * Returns the rotation of all parent elements

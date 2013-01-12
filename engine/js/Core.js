@@ -17,25 +17,25 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
 	    
         ResourceManager.initLocalResources();
         
-        ResourceManager.addResource("crown", "crown.png");
-        ResourceManager.addResource("leaves", "leaves.png");
-        ResourceManager.addResource("trunk", "trunk.png");
-        ResourceManager.addResource("rect", "rect.png");
-        ResourceManager.addResource("rect2", "rect2.png");
-        ResourceManager.addResource("rect3", "rect3.png");
+        ResourceManager.addResource("crown", "engine/img/crown.png");
+        ResourceManager.addResource("leaves", "engine/img/leaves.png");
+        ResourceManager.addResource("trunk", "engine/img/trunk.png");
+        ResourceManager.addResource("rect", "engine/img/rect.png");
+        ResourceManager.addResource("rect2", "engine/img/rect2.png");
+        ResourceManager.addResource("rect3", "engine/img/rect3.png");
         
-        ResourceManager.addResource("island", "island.jpg");
-        ResourceManager.addResource("ship", "ship.png");
-        ResourceManager.addResource("trunk1", "trunk/trunk1.png");
-        ResourceManager.addResource("trunk2", "trunk/trunk2.png");
-        ResourceManager.addResource("trunk3", "trunk/trunk3.png");
-        ResourceManager.addResource("leaf1", "leaves/leaf1.png");
-        ResourceManager.addResource("leaf2", "leaves/leaf2.png");
-        ResourceManager.addResource("leaf3", "leaves/leaf3.png");
-        ResourceManager.addResource("leaf4", "leaves/leaf4.png");
-        ResourceManager.addResource("leaf5", "leaves/leaf5.png");
-        ResourceManager.addResource("leaf6", "leaves/leaf6.png");
-        ResourceManager.addResource("leaf7", "leaves/leaf7.png");
+        ResourceManager.addResource("island", "engine/img/island.jpg");
+        ResourceManager.addResource("ship", "engine/img/ship.png");
+        ResourceManager.addResource("trunk1", "engine/img/trunk/trunk1.png");
+        ResourceManager.addResource("trunk2", "engine/img/trunk/trunk2.png");
+        ResourceManager.addResource("trunk3", "engine/img/trunk/trunk3.png");
+        ResourceManager.addResource("leaf1", "engine/img/leaves/leaf1.png");
+        ResourceManager.addResource("leaf2", "engine/img/leaves/leaf2.png");
+        ResourceManager.addResource("leaf3", "engine/img/leaves/leaf3.png");
+        ResourceManager.addResource("leaf4", "engine/img/leaves/leaf4.png");
+        ResourceManager.addResource("leaf5", "engine/img/leaves/leaf5.png");
+        ResourceManager.addResource("leaf6", "engine/img/leaves/leaf6.png");
+        ResourceManager.addResource("leaf7", "engine/img/leaves/leaf7.png");
         
 		if (Storage.supportsLocalStorage()) {
 			properties = Storage.get("animation");
