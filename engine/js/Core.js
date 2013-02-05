@@ -37,6 +37,9 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
         ResourceManager.addResource("leaf6", "engine/img/leaves/leaf6.png");
         ResourceManager.addResource("leaf7", "engine/img/leaves/leaf7.png");
         
+        ResourceManager.addResource("pendulumArm", "engine/img/pendulumArm.png");
+        ResourceManager.addResource("pendulum", "engine/img/pendulum.png");
+        
 		if (Storage.supportsLocalStorage()) {
 			properties = Storage.get("animation");
 		}
@@ -464,31 +467,31 @@ define(["engine/AnimEn", "engine/AnimObject", "engine/DisplayObject", "engine/Sp
     "refX": 0.5,
     "refY": 0.5,
     "children": {
-      "new17": {
+      "pendulumArm": {
         "x": 309,
         "y": 3,
         "rotation": 45.29950474459515,
         "width": 10,
         "height": 179,
         "id": 17,
-        "name": "new17",
+        "name": "pendulumArm",
         "refX": 0.5,
         "refY": 0.01,
         "children": {
-          "new19": {
+          "pendulum": {
             "x": 0,
             "y": 213,
             "width": 100,
             "height": 100,
             "id": 19,
-            "name": "new19",
+            "name": "pendulum",
             "refX": 0.5,
             "refY": 0.5,
             "children": {},
-            "resourceKey": "rect3"
+            "resourceKey": "pendulum"
           }
         },
-        "resourceKey": "rect"
+        "resourceKey": "pendulumArm"
       }
     },
     "animations": {

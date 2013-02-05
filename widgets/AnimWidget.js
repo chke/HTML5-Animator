@@ -686,7 +686,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 			this.draggableObject = null;
 			
 			
-            if (this.selectedObject) {
+            if (this.selectedObject && (this.draggingRefPoint || this.resize || this.rotate || this.mouseMoved || this.deselect)) {
                 dojo.publish("/animwidget/updateObject", [this.selectedObject]);
             }
 			
@@ -723,8 +723,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dojo/io/scr
 			    
 			    this.draggableObject = null;
 			}
-			
-            dojo.publish("/animwidget/update", [this.stage]);
+			if (this.selectedObject || this.draggingRefPoint || this.resize || this.rotate || this.mouseMoved || this.deselect) {
+            	dojo.publish("/animwidget/update", [this.stage]);
+            }
 		},
 		onMouseLeaveStage : function(event) {
 			this.draggableObject = null;

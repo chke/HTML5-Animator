@@ -87,7 +87,7 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        if (this.rotation !== undefined && this.rotation !== 0) {
 	        	if (this.domNode.style.transform != null) {
 	        		this.domNode.style.transform += "rotate(" + this.rotation + "deg)";
-	        	} else if (this.domNode.style.transform == null) {
+	        	} else if (this.domNode.style.MozTransform != null) {
 	        		this.domNode.style.MozTransform += "rotate(" + this.rotation + "deg)";
 	        	} else if(this.domNode.style.webkitTransform != null) {
 	        		this.domNode.style.webkitTransform += "rotate(" + this.rotation + "deg)";
@@ -96,7 +96,7 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        if ((this.scaleX !== undefined || this.scaleY !== undefined) && (this.scaleX !== 0 || this.scaleY !== 0)) {
 	        	if (this.domNode.style.transform != null) {
 		            this.domNode.style.transform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
-	        	} else if (this.domNode.style.transform == null) {
+	        	} else if (this.domNode.style.MozTransform != null) {
 		        	this.domNode.style.MozTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
 	        	} else if (this.domNode.style.webkitTransform != null) {
 		            this.domNode.style.webkitTransform += "scale(" + this.getScaleX() + ", " + this.getScaleY() + ")";
@@ -106,7 +106,7 @@ define(['engine/Vector2d'], function(Vector2d) {
 	        	if (this.domNode.style.transformOrigin != null) {
 	        		this.domNode.style.transformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
 	        	}
-	            if (this.domNode.style.transformOrigin == null) {
+	            if (this.domNode.style.MozTransformOrigin != null) {
 	            	this.domNode.style.MozTransformOrigin = "" + (this.refX * 100) + "% " + (this.refY * 100) + "%";
 	            }
 	            if (this.domNode.style.webkitTransformOrigin != null) {

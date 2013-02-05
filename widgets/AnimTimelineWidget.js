@@ -183,6 +183,9 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
             } else if (menuItem.id == "addKf") {
             	var pos = this.fitToGrid(this.keyframeX + this.gridSize / 2);
                 var keyframeId = pos / this.gridSize - 1;
+                if (this.stageObjects[this.selectedDisplObj.getId()]["tween"] == null) {
+                	this.stageObjects[this.selectedDisplObj.getId()]["tween"] = {};
+                }
                 if (this.stageObjects[this.selectedDisplObj.getId()]["tween"][keyframeId] == null) {
 	                this.stageObjects[this.selectedDisplObj.getId()]["tween"][keyframeId] = {};
 	                this.addKeyframe(this.selectedDisplObj, keyframeId, this.stageObjects[this.selectedDisplObj.getId()]["tween"], this.activeScene, false);
@@ -708,18 +711,18 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_TemplatedMixin", "dijit/
                 keyframeNode = $('<div class="objectTimeline"></div>');
                 
                 keyframeNode.click({that: this, displObj: displObj}, function(event) {
-                    var that = event.data.that;
-                    var pos = that.fitToGrid((event.pageX - $(event.target).offset().left) + that.gridSize / 2);
-                    var keyframeId = pos / that.gridSize;
-                    var obj = that.findStageObjectByKeyframe(that.selectedKeyframe);
-                    if (event.data.displObj != null && (that.stageObjects[event.data.displObj.getId()] == null 
-                    	|| that.stageObjects[event.data.displObj.getId()]["tween"] == null || that.stageObjects[event.data.displObj.getId()]["tween"][keyframeId] == null)) {
-	                    if (that.stageObjects[event.data.displObj.getId()] == null) {
-	                        that.stageObjects[event.data.displObj.getId()] = {};
-	                        that.stageObjects[event.data.displObj.getId()]["tween"] = {};
-	                    }
-	                    that.addKeyframe(event.data.displObj, keyframeId, that.stageObjects[event.data.displObj.getId()]["tween"], that.activeScene, false);
-                	}
+                    // var that = event.data.that;
+                    // var pos = that.fitToGrid((event.pageX - $(event.target).offset().left) + that.gridSize / 2);
+                    // var keyframeId = pos / that.gridSize;
+                    // var obj = that.findStageObjectByKeyframe(that.selectedKeyframe);
+                    // if (event.data.displObj != null && (that.stageObjects[event.data.displObj.getId()] == null 
+                    	// || that.stageObjects[event.data.displObj.getId()]["tween"] == null || that.stageObjects[event.data.displObj.getId()]["tween"][keyframeId] == null)) {
+	                    // if (that.stageObjects[event.data.displObj.getId()] == null) {
+	                        // that.stageObjects[event.data.displObj.getId()] = {};
+	                        // that.stageObjects[event.data.displObj.getId()]["tween"] = {};
+	                    // }
+	                    // that.addKeyframe(event.data.displObj, keyframeId, that.stageObjects[event.data.displObj.getId()]["tween"], that.activeScene, false);
+                	// }
                 });
                 keyframeNode.mousedown({that: this, displObj: displObj}, function(event) {
                 	event.data.that.selectedDisplObj = event.data.displObj;

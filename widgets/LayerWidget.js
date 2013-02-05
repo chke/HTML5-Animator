@@ -31,7 +31,7 @@ require(["dojo/_base/declare", "dijit/_Widget", "dijit/_Templated", "dijit/Tree"
             if (element !== undefined) {
                 var currElem = element;
                 var path = [];
-                while (currElem !== undefined && currElem.getId() !== undefined) {
+                while (currElem != undefined && currElem.getId() != undefined && currElem.getId() != 0) {
 
                     path.push("layer" + currElem.getId());
                     currElem = currElem.getParent();
